@@ -1,0 +1,19 @@
+# dependencies
+node_modules
+frontend/node_modules
+
+# env
+.env
+.env.*
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# misc
+.DS_Store
+
