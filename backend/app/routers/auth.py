@@ -13,6 +13,10 @@ async def signup(payload: SignupRequest):
         return TokenResponse(access_token=token)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # Debugging: surface the actual exception to unblock Phase 2 work
+        raise HTTPException(status_code=500, detail=repr(e))
+
 
 
 @router.post('/login', response_model=TokenResponse)

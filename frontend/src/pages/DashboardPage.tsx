@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { API } from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { connectFigmaToken, importFigmaByUrl } from '../api/figma'
+import { FigmaParserPanels } from '../components/figma/FigmaParserPanels'
 
 type Project = {
   id: string
+
   name: string
   created_at: string
 }
@@ -15,6 +18,16 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
+
+  const [figmaToken, setFigmaToken] = useState('')
+  const [figmaUrl, setFigmaUrl] = useState('')
+  const [figmaBusy, setFigmaBusy] = useState(false)
+  const [figmaStep, setFigmaStep] = useState<string | null>(null)
+  const [figmaResult, setFigmaResult] = useState<null | {
+    pages: any[]
+    typography: any[]
+    colors: any[]
+  }>(null)
 
   async function refresh() {
     setLoading(true)
@@ -28,6 +41,7 @@ export default function DashboardPage() {
       setLoading(false)
     }
   }
+
 
 
   useEffect(() => {
@@ -59,11 +73,16 @@ export default function DashboardPage() {
     } catch (e: any) {
       setError(e?.message ?? 'Failed to delete project')
     }
-
   }
+
 
   return (
     <section className="max-w-6xl mx-auto px-4 py-10">
+      {figmaResult ? (
+        <div className="mt-6">
+          <FigmaParserPanels pages={figmaResult.pages} typography={figmaResult.typography} colors={figmaResult.colors} />
+        </div>
+      ) : null}
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="lg:w-72">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -71,14 +90,85 @@ export default function DashboardPage() {
             <div className="text-sm text-slate-400 mt-1">Projects are stored securely per account.</div>
 
             <div className="mt-6 p-3 rounded-xl border border-white/10 bg-slate-950/30">
-              <div className="text-sm font-semibold text-slate-100">Upload area (Phase 2)</div>
-              <div className="text-xs text-slate-400 mt-1">Screenshot upload + AI analysis will appear here.</div>
+              <div className="text-sm font-semibold text-slate-100">Figma Integration (Phase 2)</div>
+              <div className="text-xs text-slate-400 mt-1">Connect your Figma token, then import a file by URL.</div>
+
+              <div className="mt-4 space-y-3">
+                <div>
+                  <div className="text-xs text-slate-300 mb-1">Figma Access Token</div>
+                  <input
+                    value={figmaToken}
+                    onChange={(e) => setFigmaToken(e.target.value)}
+                    placeholder="figd_..."
+                    className="w-full rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 outline-none focus:border-indigo-500 text-sm"
+                  />
+                </div>
+
+                <button
+                  disabled={figmaBusy || !figmaToken.trim()}
+                  onClick={async () => {
+                    setFigmaBusy(true)
+                    setFigmaStep('Validating token...')
+                    setError(null)
+                    try {
+                      await connectFigmaToken(figmaToken.trim())
+                      setFigmaStep('Token connected')
+                    } catch (e: any) {
+                      setError(e?.message ?? 'Failed to connect Figma token')
+                      setFigmaStep(null)
+                    } finally {
+                      setFigmaBusy(false)
+                      setTimeout(() => setFigmaStep(null), 1200)
+                    }
+                  }}
+                  className="w-full rounded-xl bg-white text-slate-950 font-semibold px-4 py-2 text-sm hover:bg-white/90 disabled:opacity-60"
+                >
+                  {figmaBusy && figmaStep ? figmaStep : 'Connect Figma'}
+                </button>
+
+                <div>
+                  <div className="text-xs text-slate-300 mb-1">Figma File URL</div>
+                  <input
+                    value={figmaUrl}
+                    onChange={(e) => setFigmaUrl(e.target.value)}
+                    placeholder="https://www.figma.com/file/<key>/..."
+                    className="w-full rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 outline-none focus:border-indigo-500 text-sm"
+                  />
+                </div>
+
+                <button
+                  disabled={figmaBusy || !figmaUrl.trim()}
+                  onClick={async () => {
+                    setFigmaBusy(true)
+                    setFigmaStep('Extracting file key...')
+                    setError(null)
+                    setFigmaResult(null)
+                    try {
+                      setFigmaStep('Fetching Figma JSON...')
+                      const res = await importFigmaByUrl({ figma_url: figmaUrl.trim(), project_name: 'Figma Import' })
+                      setFigmaResult({ pages: res.pages, typography: res.typography, colors: res.colors })
+                      setFigmaStep('Parsing complete')
+                    } catch (e: any) {
+                      setError(e?.message ?? 'Failed to import from Figma URL')
+                      setFigmaStep(null)
+                    } finally {
+                      setFigmaBusy(false)
+                      setTimeout(() => setFigmaStep(null), 1200)
+                    }
+                  }}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 text-white font-semibold px-4 py-2 text-sm hover:bg-white/10 disabled:opacity-60"
+                >
+                  {figmaBusy && figmaStep ? figmaStep : 'Import'}
+                </button>
+              </div>
             </div>
+
           </div>
         </aside>
 
         <div className="flex-1">
           <div className="flex items-start justify-between gap-4">
+
             <div>
               <h1 className="text-3xl font-semibold">Dashboard</h1>
               <p className="text-slate-400 mt-2">Create and manage your projects.</p>

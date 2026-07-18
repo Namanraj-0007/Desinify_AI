@@ -19,3 +19,4 @@ export async function deleteProject(id: string, config?: AuthConfig) {
   return res.data
 }
 
+

@@ -13,14 +13,11 @@ type ApiErrorShape = {
   detail?: string
 }
 
+// NOTE (Phase 2): avoid Authorization header to prevent CORS preflight issues in this environment.
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers = config.headers ?? {}
-    config.headers.Authorization = `Bearer ${token}`
-  }
   return config
 })
+
 
 API.interceptors.response.use(
   (res) => res,

@@ -2,14 +2,16 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # MongoDB (env vars: MONGODB_URI, DB_NAME)
     mongodb_uri: str = 'mongodb://localhost:27017'
     database_name: str = 'designify_ai'
-    jwt_secret: str = 'change_me_super_secret'
 
+    # JWT
+    jwt_secret: str = 'change_me_super_secret'
     jwt_algorithm: str = 'HS256'
     jwt_access_token_expire_minutes: int = 60
 
-    cors_origins: str = 'http://localhost:5173'
+    cors_origins: str = '*'
     api_prefix: str = '/api'
 
     # Google OAuth
@@ -29,3 +31,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
