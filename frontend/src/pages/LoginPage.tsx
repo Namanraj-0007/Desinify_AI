@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, token, loading } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
+
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -24,8 +25,15 @@ export default function LoginPage() {
     }
   }
 
+  if (!loading && token) {
+    // If already authenticated, redirect away from login.
+    navigate('/dashboard', { replace: true })
+    return null
+  }
+
   return (
     <section className="max-w-md mx-auto px-4 py-14">
+
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <h2 className="text-2xl font-semibold">Login</h2>
         <p className="text-slate-400 mt-2">Access your projects dashboard.</p>

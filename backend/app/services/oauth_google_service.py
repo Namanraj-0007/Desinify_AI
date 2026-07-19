@@ -60,26 +60,9 @@ class _GoogleOAuthFlow:
             }
             async with httpx.AsyncClient(timeout=10) as client:
                 r = await client.post(settings.google_oauth_token_url, data=data)
-                try:
-                    r.raise_for_status()
-                except Exception:
-                    # TEMP DEBUG (Phase-1 only): dump exact Google error response (no secrets)
-                    print('[google-token-exchange] FAILED')
-                    print('[google-token-exchange] redirect_uri=', settings.google_oauth_redirect_uri)
-                    masked_client_id = (
-                        settings.google_oauth_client_id[:6] + '…' + settings.google_oauth_client_id[-4:]
-                        if settings.google_oauth_client_id
-                        else ''
-                    )
-                    print('[google-token-exchange] client_id=', masked_client_id)
-                    print('[google-token-exchange] http_status=', getattr(r, 'status_code', None))
-                    print('[google-token-exchange] response_text=', r.text)
-                    try:
-                        print('[google-token-exchange] response_json=', r.json())
-                    except Exception:
-                        print('[google-token-exchange] response_json=<<not-json>>')
-                    raise
+                r.raise_for_status()
                 self.credentials = r.json()
+
 
 
         # Note: caller is async; just store coroutine and run with await from callback.

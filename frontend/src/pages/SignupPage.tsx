@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function SignupPage() {
-  const { signup } = useAuth()
+  const { signup, token, loading } = useAuth()
   const navigate = useNavigate()
+
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -26,8 +27,15 @@ export default function SignupPage() {
     }
   }
 
+  if (!loading && token) {
+    // If already authenticated, redirect away from signup.
+    navigate('/dashboard', { replace: true })
+    return null
+  }
+
   return (
     <section className="max-w-md mx-auto px-4 py-14">
+
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <h2 className="text-2xl font-semibold">Create account</h2>
         <p className="text-slate-400 mt-2">Start generating reusable components.</p>

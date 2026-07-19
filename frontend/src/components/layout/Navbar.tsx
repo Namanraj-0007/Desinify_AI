@@ -37,22 +37,18 @@ export default function Navbar() {
               </button>
             </>
           ) : (
+            // Limited auth actions on public pages: show only one primary entry point.
             <>
               <Link
                 to="/login"
-                className="text-sm px-3 py-2 rounded-lg hover:bg-white/5 border border-white/10"
-              >
-                Login
-              </Link>
-              <Link
-                to="/signup"
                 className="text-sm px-3 py-2 rounded-lg bg-white text-slate-950 font-medium hover:bg-white/90"
               >
-                Sign up
+                Get started
               </Link>
             </>
           )}
         </nav>
+
       </div>
     </header>
   )

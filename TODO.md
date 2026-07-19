@@ -1,51 +1,23 @@
-<<<<<<< Updated upstream
-Phase - 1  Is Succesfully Cleared and Completed 
-Work :- completed Phase 1 foundation and authentication
-=======
-# TODO.md — Phase 2 (Figma Integration & AI Parsing)
+# DesinifyAI - Config verification TODO
 
-## Backend
-- [x] Add Figma router: `backend/app/routers/figma.py`
+## Step 1: Validate & tighten environment loading
+- [x] Inspect `backend/app/config/settings.py` and `backend/app/main.py`.
+- [x] Identify current issues: no masked config printing, insufficient fail-fast validation for Mongo vars, redundant dotenv loading.
+- [x] Add masked dump + validators in `backend/app/config/settings.py`.
+- [x] Update `backend/app/main.py` to:
 
-- [x] Add Figma service: `backend/app/services/figma_service.py`
-- [x] Add design parser: `backend/app/services/design_parser.py`
+  - ensure `.env` loading is consistent (single source of truth)
+  - print masked loaded configuration on startup
+  - fail fast for all required env vars
+  - validate `GOOGLE_REDIRECT_URI` against callback route path
 
-- [x] Add token normalization (design tokens) into parser output
+## Step 2: Verify mappings and remove conflicts
+- [ ] Ensure `settings` singleton is the only Settings instance.
+- [ ] Verify Mongo client uses `settings.mongodb_uri` and `settings.database_name`.
+- [ ] Verify Mongo ping connects successfully with Atlas values.
+- [ ] Verify CORS_ORIGINS splitting into list.
+- [ ] Verify hardcoded secrets/URLs/ports are absent.
 
-- [ ] Persist parsed projects/tokens in Mongo (extend models/services/schemas)
-- [ ] Add API endpoints for:
-  - [ ] store/validate Figma access token
-  - [ ] import by Figma URL (extract file key + fetch JSON)
-  - [ ] return pages/frames/components
-  - [ ] return extracted tokens
-- [x] Add structured error handling scaffolding (planned in implementation)
-- [x] Connect Figma token + import URL + basic parsing + frontend display wiring
-
-
-
-## Frontend
-- [x] Add `frontend/src/api/figma.ts`
-- [ ] Update `DashboardPage` upload area UI:
-  - [ ] Figma token connect UI
-  - [ ] Figma URL import UI
-  - [ ] Loading states
-  - [ ] Error states
-- [ ] Add UI to display:
-  - [ ] Pages
-  - [ ] Frames
-  - [ ] Components
-  - [ ] Images
-  - [ ] Typography
-  - [ ] Colors
-- [ ] Wire UI to backend endpoints
-
-## Tests
-- [ ] Unit tests for file key extraction & JSON parsing
-- [ ] Unit tests for token normalization determinism
-- [ ] Endpoint tests for figma token import & parsing responses
-
-## Verification
-- [ ] Run backend + frontend
-- [ ] Validate full flow end-to-end
-
->>>>>>> Stashed changes
+## Step 3: Final verification
+- [ ] Run backend startup and confirm logs.
+- [ ] Show every modified file + explanation.
