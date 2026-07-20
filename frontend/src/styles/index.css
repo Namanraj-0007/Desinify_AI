@@ -1,13 +1,186 @@
+@import '@fontsource/space-grotesk/300.css';
+@import '@fontsource/space-grotesk/400.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/600.css';
+@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/inter/300.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 5.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 5.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 252 87% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 252 87% 65%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv02', 'cv03';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: hsl(252 87% 65% / 0.3);
+    color: hsl(0 0% 98%);
+  }
 }
 
-html,
-body {
-  height: 100%;
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-cyan-300 to-fuchsia-300;
+  }
+
+  .text-gradient-subtle {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200;
+  }
+
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-hover {
+    @apply hover:bg-white/[0.08] transition-colors duration-300;
+  }
+
+  .glow {
+    box-shadow: 0 0 40px hsl(252 87% 65% / 0.15), 0 0 80px hsl(252 87% 65% / 0.05);
+  }
+
+  .glow-sm {
+    box-shadow: 0 0 20px hsl(252 87% 65% / 0.1);
+  }
+
+  .gradient-border {
+    position: relative;
+    border-radius: inherit;
+    overflow: hidden;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(252 87% 65% / 0.5), hsl(187 87% 55% / 0.5), hsl(340 87% 65% / 0.5));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .transform-gpu-3d {
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+  }
+
+  .grid-pattern {
+    background-image: radial-gradient(circle, hsl(240 5% 15% / 0.3) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(240 3.7% 20%);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(240 3.7% 30%);
+  }
+}
+
+/* Aurora background animation */
+@keyframes aurora-move {
+  0% { transform: translate(0%, 0%) rotate(0deg); }
+  25% { transform: translate(5%, -5%) rotate(2deg); }
+  50% { transform: translate(-3%, 3%) rotate(-1deg); }
+  75% { transform: translate(2%, 2%) rotate(1deg); }
+  100% { transform: translate(0%, 0%) rotate(0deg); }
+}
+
+.aurora-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.aurora-bg::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background:
+    radial-gradient(ellipse at 20% 50%, hsl(252 87% 65% / 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 20%, hsl(187 87% 55% / 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, hsl(340 87% 65% / 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 60%, hsl(220 87% 55% / 0.1) 0%, transparent 50%);
+  animation: aurora-move 20s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Shimmer gradient animation */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(240 3.7% 20% / 0.5) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
 }
 
