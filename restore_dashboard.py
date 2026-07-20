@@ -1,4 +1,7 @@
-import { useEffect, useState, useCallback } from 'react'
+#!/usr/bin/env python3
+"""Restore DashboardPage.tsx with properly balanced JSX tags."""
+
+content = r'''import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { API } from '../services/api'
@@ -27,10 +30,10 @@ type Project = {
 }
 
 const statsCards = [
-  { label: 'Total Projects', value: '—', icon: '📁' },
-  { label: 'Components Generated', value: '—', icon: '⚛️' },
-  { label: 'AI Edits Used', value: '—', icon: '🤖' },
-  { label: 'Storage Used', value: '—', icon: '💾' },
+  { label: 'Total Projects', value: '\u2014', icon: '\uD83D\uDCC1' },
+  { label: 'Components Generated', value: '\u2014', icon: '\u269B\uFE0F' },
+  { label: 'AI Edits Used', value: '\u2014', icon: '\uD83E\uDD16' },
+  { label: 'Storage Used', value: '\u2014', icon: '\uD83D\uDCBE' },
 ]
 
 export default function DashboardPage() {
@@ -43,7 +46,6 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
-
   const [figmaToken, setFigmaToken] = useState('')
   const [figmaUrl, setFigmaUrl] = useState('')
   const [figmaBusy, setFigmaBusy] = useState(false)
@@ -69,16 +71,13 @@ export default function DashboardPage() {
       const result = await listFigmaProjects()
       setFigmaProjects(result.projects)
     } catch {
-      // Silently fail - figma may not be connected
+      // Figma may not be connected
     } finally {
       setFigmaProjectsLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    refresh()
-    refreshFigmaProjects()
-  }, [refreshFigmaProjects])
+  useEffect(() => { refresh(); refreshFigmaProjects() }, [refreshFigmaProjects])
 
   async function createProject() {
     if (!newName.trim()) return
@@ -95,20 +94,19 @@ export default function DashboardPage() {
     }
   }
 
-  async function deleteProject(id: string) {
+  async function handleDeleteFigmaProject(id: string) {
     setError(null)
     try {
-      await API.delete(`/projects/${id}`)
-      await refresh()
+      await deleteFigmaProject(id)
+      await refreshFigmaProjects()
     } catch (e: any) {
-      setError(e?.message ?? 'Failed to delete project')
+      setError(e?.message ?? 'Failed to delete Figma project')
     }
   }
 
   return (
     <PageTransition>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight">Dashboard</h1>
@@ -116,33 +114,21 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <Badge variant="gradient" className="text-xs">
-              {projects.length} project{projects.length !== 1 ? 's' : ''}
+              {projects.length + figmaProjects.length} project{(projects.length + figmaProjects.length) !== 1 ? 's' : ''}
             </Badge>
           </div>
-        </div>
 
-        {/* Import Results */}
         {figmaResult && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <SpotlightCard className="rounded-2xl">
-              <div className="glass rounded-2xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-display text-lg font-semibold">Import Results</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {figmaResult.stats?.total_frames || 0} frames &middot; {figmaResult.stats?.total_components || 0} components &middot; {figmaResult.colors.length} colors &middot; {figmaResult.typography.length} typography styles
-                    </p>
+              <div className="glass rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400">&check;</span>
+                    <h3 className="font-semibold">Import Complete</h3>
+                    <Badge variant="gradient" className="text-[10px]">{figmaResult.figma_file_key.slice(0, 8)}...</Badge>
                   </div>
-                  <button
-                    onClick={() => navigate('/dashboard/figma/' + figmaResult.project_id)}
-                    className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
-                  >
-                    View Details &rarr;
-                  </button>
+                  <button onClick={() => { setFigmaResult(null); navigate('/dashboard/figma/' + figmaResult.project_id); }} className="text-xs text-indigo-400 hover:text-indigo-300">View Details &rarr;</button>
                 </div>
                 <FigmaParserPanels
                   pages={figmaResult.pages}
@@ -160,9 +146,7 @@ export default function DashboardPage() {
         )}
 
         <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-          {/* Sidebar */}
           <aside className="space-y-6">
-            {/* Stats mini-cards */}
             <div className="grid grid-cols-2 gap-3">
               {statsCards.slice(0, 2).map((stat) => (
                 <SpotlightCard key={stat.label} className="rounded-xl">
@@ -170,12 +154,10 @@ export default function DashboardPage() {
                     <div className="text-lg">{stat.icon}</div>
                     <div className="text-lg font-semibold font-display mt-1">{stat.value}</div>
                     <div className="text-[10px] text-muted-foreground">{stat.label}</div>
-                  </div>
                 </SpotlightCard>
               ))}
             </div>
 
-            {/* Figma Integration */}
             <SpotlightCard className="rounded-2xl">
               <div className="glass rounded-2xl p-5 space-y-4">
                 <div>
@@ -185,152 +167,74 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Access Token</label>
-                    <Input
-                      value={figmaToken}
-                      onChange={(e) => setFigmaToken(e.target.value)}
-                      placeholder="figd_..."
-                      className="text-xs h-9"
-                    />
+                    <Input value={figmaToken} onChange={(e) => setFigmaToken(e.target.value)} placeholder="figd_..." className="text-xs h-9" />
                   </div>
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    disabled={figmaBusy || !figmaToken.trim()}
+                  <Button size="sm" className="w-full" disabled={figmaBusy || !figmaToken.trim()}
                     onClick={async () => {
-                      setFigmaBusy(true)
-                      setFigmaStep('Validating...')
-                      setError(null)
-                      try {
-                        await connectFigmaToken(figmaToken.trim())
-                        setFigmaStep('Connected ✓')
-                      } catch (e: any) {
-                        setError(e?.message ?? 'Failed to connect')
-                        setFigmaStep(null)
-                      } finally {
-                        setFigmaBusy(false)
-                        setTimeout(() => setFigmaStep(null), 1500)
-                      }
+                      setFigmaBusy(true); setFigmaStep('Validating...'); setError(null);
+                      try { await connectFigmaToken(figmaToken.trim()); setFigmaStep('Connected'); await refreshFigmaProjects(); }
+                      catch (e: any) { setError(e?.message ?? 'Failed to connect'); setFigmaStep(null); }
+                      finally { setFigmaBusy(false); setTimeout(() => setFigmaStep(null), 1500); }
                     }}
-                  >
-                    {figmaBusy && figmaStep ? figmaStep : 'Connect'}
-                  </Button>
+                  >{figmaBusy && figmaStep ? figmaStep : 'Connect'}</Button>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">File URL</label>
-                    <Input
-                      value={figmaUrl}
-                      onChange={(e) => setFigmaUrl(e.target.value)}
-                      placeholder="https://www.figma.com/file/..."
-                      className="text-xs h-9"
-                    />
+                    <Input value={figmaUrl} onChange={(e) => setFigmaUrl(e.target.value)} placeholder="https://www.figma.com/file/..." className="text-xs h-9" />
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full"
-                    disabled={figmaBusy || !figmaUrl.trim()}
+                  <Button size="sm" variant="outline" className="w-full" disabled={figmaBusy || !figmaUrl.trim()}
                     onClick={async () => {
-                      setFigmaBusy(true)
-                      setFigmaStep('Importing...')
-                      setError(null)
-                      setFigmaResult(null)
+                      setFigmaBusy(true); setFigmaStep('Importing...'); setError(null); setFigmaResult(null);
                       try {
-                        const res = await importFigmaByUrl({
-                          figma_url: figmaUrl.trim(),
-                          project_name: 'Figma Import',
-                        })
-                        setFigmaResult(res)
-                        setFigmaStep('Complete ✓')
-                        await refreshFigmaProjects()
-                      } catch (e: any) {
-                        setError(e?.message ?? 'Import failed')
-                        setFigmaStep(null)
-                      } finally {
-                        setFigmaBusy(false)
-                        setTimeout(() => setFigmaStep(null), 1500)
+                        const res = await importFigmaByUrl({ figma_url: figmaUrl.trim(), project_name: 'Figma Import' });
+                        setFigmaResult(res); setFigmaStep('Complete'); await refreshFigmaProjects();
                       }
+                      catch (e: any) { setError(e?.message ?? 'Import failed'); setFigmaStep(null); }
+                      finally { setFigmaBusy(false); setTimeout(() => setFigmaStep(null), 1500); }
                     }}
-                  >
-                    {figmaBusy && figmaStep ? figmaStep : 'Import'}
-                  </Button>
+                  >{figmaBusy && figmaStep ? figmaStep : 'Import'}</Button>
                 </div>
-              </div>
             </SpotlightCard>
 
-            {/* Figma Projects */}
-            {figmaProjectsLoading ? (
-              <AILoadingState lines={2} />
-            ) : figmaProjects.length > 0 && (
+            {figmaProjects.length > 0 && (
               <SpotlightCard className="rounded-2xl">
-                <div className="glass rounded-2xl p-5">
-                  <h3 className="font-display font-semibold text-sm mb-3">Imported Projects</h3>
-                  <div className="space-y-2">
-                    {figmaProjects.map((fp) => (
-                      <FigmaProjectCard
-                        key={fp.id}
-                        project={fp}
-                        onClick={() => navigate('/dashboard/figma/' + fp.id)}
-                        onDelete={async () => {
-                          await deleteFigmaProject(fp.id)
-                          await refreshFigmaProjects()
-                        }}
-                      />
-                    ))}
+                <div className="glass rounded-2xl p-4">
+                  <h3 className="font-display font-semibold text-sm mb-3 flex items-center gap-2">
+                    Figma Designs <Badge variant="gradient" className="text-[10px]">{figmaProjects.length}</Badge>
+                  </h3>
+                  <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                    {figmaProjectsLoading ? <AILoadingState lines={2} /> : (
+                      figmaProjects.map((fp) => (
+                        <FigmaProjectCard key={fp.id} project={fp} onClick={() => navigate('/dashboard/figma/' + fp.id)} onDelete={() => handleDeleteFigmaProject(fp.id)} />
+                      ))
+                    )}
                   </div>
-                </div>
               </SpotlightCard>
             )}
           </aside>
 
-          {/* Main content */}
           <div className="space-y-6">
-            {/* Create project */}
             <SpotlightCard className="rounded-2xl">
               <div className="glass rounded-2xl p-5">
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Input
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="New project name..."
-                    className="flex-1"
-                    onKeyDown={(e) => e.key === 'Enter' && createProject()}
-                  />
-                  <Button
-                    onClick={createProject}
-                    disabled={creating || !newName.trim()}
-                    variant="gradient"
-                  >
-                    {creating ? 'Creating...' : 'Create project'}
-                  </Button>
+                  <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New project name..." className="flex-1" onKeyDown={(e) => e.key === 'Enter' && createProject()} />
+                  <Button onClick={createProject} disabled={creating || !newName.trim()} variant="gradient">{creating ? 'Creating...' : 'Create project'}</Button>
                 </div>
-              </div>
             </SpotlightCard>
 
-            {/* Error */}
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300"
-              >
-                {error}
-              </motion.div>
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">{error}</motion.div>
             )}
 
-            {/* Projects list */}
             <SpotlightCard className="rounded-2xl">
               <div className="glass rounded-2xl overflow-hidden">
                 <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
                   <h3 className="font-display font-semibold">Projects</h3>
-                  <span className="text-xs text-muted-foreground">
-                    {loading ? 'Loading...' : `${projects.length} total`}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{loading ? 'Loading...' : projects.length + ' total'}</span>
                 </div>
                 <div className="divide-y divide-border/50">
-                  {loading ? (
-                    <AILoadingState lines={3} />
-                  ) : projects.length === 0 ? (
+                  {loading ? <AILoadingState lines={3} /> : projects.length === 0 ? (
                     <div className="p-8 text-center">
-                      <div className="text-2xl mb-3">🚀</div>
+                      <div className="text-2xl mb-3">{'\\uD83D\\uDE80'}</div>
                       <p className="text-sm text-muted-foreground">No projects yet. Create your first project above.</p>
                     </div>
                   ) : (
@@ -344,13 +248,7 @@ export default function DashboardPage() {
                             <div className="font-medium text-sm truncate">{p.name}</div>
                             <div className="text-xs text-muted-foreground">Created {new Date(p.created_at).toLocaleDateString()}</div>
                         </div>
-                          </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteProject(p.id)}
-                          className="text-muted-foreground hover:text-red-400 shrink-0"
-                        >
+                        <Button size="sm" variant="ghost" onClick={async () => { await API.delete('/projects/' + p.id); await refresh(); }} className="text-muted-foreground hover:text-red-400 shrink-0">
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                           </svg>
@@ -359,10 +257,8 @@ export default function DashboardPage() {
                     ))
                   )}
                 </div>
-              </div>
             </SpotlightCard>
 
-            {/* Bottom stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {statsCards.slice(2).map((stat) => (
                 <SpotlightCard key={stat.label} className="rounded-xl">
@@ -370,13 +266,28 @@ export default function DashboardPage() {
                     <div className="text-lg">{stat.icon}</div>
                     <div className="text-lg font-semibold font-display mt-1">{stat.value}</div>
                     <div className="text-[10px] text-muted-foreground">{stat.label}</div>
-                  </div>
                 </SpotlightCard>
               ))}
-          </div>
-          </div>
+            </div>
         </div>
       </section>
     </PageTransition>
   )
 }
+'''
+
+import re
+
+with open('frontend/src/pages/DashboardPage.tsx', 'w', encoding='utf-8') as f:
+    f.write(content)
+
+# Verify
+with open('frontend/src/pages/DashboardPage.tsx', 'r', encoding='utf-8') as f:
+    c = f.read()
+
+oD = len(re.findall(r'<div[ >]', c))
+cD = c.count('</div>')
+oSC = c.count('<SpotlightCard')
+cSC = c.count('</SpotlightCard>')
+print(f'Divs: {oD}:{cD} => {"OK" if oD == cD else "FAIL"}')
+print(f'SpotlightCards: {oSC}:{cSC} => {"OK" if oSC == cSC else "FAIL"}')

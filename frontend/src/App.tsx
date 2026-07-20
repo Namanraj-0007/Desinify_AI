@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout'
 import DashboardPage from './pages/DashboardPage'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
+import FigmaProjectDetailPage from './pages/FigmaProjectDetailPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { AuthProvider } from './context/AuthContext'
 
@@ -21,6 +22,15 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/dashboard/figma/:projectId"
+              element={
+                <ProtectedRoute>
+                  <FigmaProjectDetailPage />
                 </ProtectedRoute>
               }
             />
