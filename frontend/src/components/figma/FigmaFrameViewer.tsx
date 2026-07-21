@@ -27,8 +27,8 @@ export function FigmaFrameViewer({ frames, onSelectFrame, selectedFrameId }: Pro
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="font-semibold flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <div className="font-semibold flex items-center gap-2 flex-wrap">
           Frames
           <Badge variant="gradient" className="text-[10px]">{frames.length}</Badge>
         </div>
@@ -37,11 +37,11 @@ export function FigmaFrameViewer({ frames, onSelectFrame, selectedFrameId }: Pro
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search frames..."
-          className="text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-indigo-500 w-40"
+          className="text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-indigo-500 w-full sm:w-40"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[400px] overflow-y-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[460px] overflow-y-auto">
         {filtered.map((frame) => (
           <motion.button
             key={frame.id}

@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import FigmaProjectDetailPage from './pages/FigmaProjectDetailPage'
+import CodeGenerationPage from './pages/CodeGenerationPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { AuthProvider } from './context/AuthContext'
 
@@ -35,6 +36,15 @@ export default function App() {
               }
             />
 
+            <Route
+              path="/dashboard/figma/:projectId/codegen"
+              element={
+                <ProtectedRoute>
+                  <CodeGenerationPage />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
@@ -42,4 +52,3 @@ export default function App() {
     </AuthProvider>
   )
 }
-

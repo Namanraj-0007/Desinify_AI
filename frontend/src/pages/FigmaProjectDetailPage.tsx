@@ -41,7 +41,6 @@ export default function FigmaProjectDetailPage() {
     try {
       await selectFigmaFrame(projectId, frame.id)
     } catch (e) {
-      // silent fail - selection is best-effort
     }
   }
 
@@ -90,7 +89,7 @@ export default function FigmaProjectDetailPage() {
             className="mt-4"
             onClick={() => navigate('/dashboard')}
           >
-            ← Back to Dashboard
+            Back to Dashboard
           </Button>
         </section>
       </PageTransition>
@@ -102,49 +101,102 @@ export default function FigmaProjectDetailPage() {
     id: f.id,
     name: f.name,
     type: f.type,
-    children: [],
+    children: [] as any[],
   }))
+
+  const summaryCards = [
+    { label: 'Frames', value: s.total_frames, icon: '🖼️' },
+    { label: 'Components', value: s.total_components, icon: '🧩' },
+    { label: 'Colors', value: s.total_colors, icon: '🎨' },
+    { label: 'Typography', value: s.total_typography_styles, icon: '🔤' },
+  ]
 
   return (
     <PageTransition>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] mb-8">
+          <div className="space-y-4">
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => navigate('/dashboard')}
                 className="text-xs text-muted-foreground hover:text-white transition-colors"
               >
-                ← Dashboard
+                &larr; Dashboard
               </button>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight mt-2">
-              {detail.project_name}
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              File key: {detail.figma_file_key} · Imported{' '}
-              {new Date(detail.created_at).toLocaleDateString()}
-            </p>
+            <div className="space-y-3">
+              <div>
+                <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight">
+                  {detail.project_name}
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Imported {new Date(detail.created_at).toLocaleDateString()} · File key {detail.figma_file_key.slice(0, 12)}...
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="gradient" className="text-xs">
+                  {detail.frames.length} frames
+                </Badge>
+                <Badge variant="gradient" className="text-xs">
+                  {detail.components.length} components
+                </Badge>
+                <Badge variant="gradient" className="text-xs">
+                  {detail.colors.length} colors
+                </Badge>
+                <Badge variant="gradient" className="text-xs">
+                  {detail.typography.length} styles
+                </Badge>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="gradient" className="text-xs">
-              🖼️ {s.total_frames} frames
-            </Badge>
-            <Badge variant="gradient" className="text-xs">
-              🧩 {s.total_components} components
-            </Badge>
-            <Badge variant="gradient" className="text-xs">
-              🎨 {s.total_colors} colors
-            </Badge>
-            <Badge variant="gradient" className="text-xs">
-              🔤 {s.total_typography_styles} styles
-            </Badge>
-          </div>
+          <SpotlightCard className="rounded-2xl">
+            <div className="glass rounded-2xl p-5 space-y-4">
+              <div>
+                <h2 className="text-sm font-semibold">Project summary</h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  A quick overview of this Figma import and project metadata.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {summaryCards.map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold">{item.value}</div>
+                        <div className="text-[10px] text-muted-foreground mt-1">{item.label}</div>
+                      </div>
+                      <div className="text-lg">{item.icon}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button
+                  variant="gradient"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate(
+                    '/dashboard/figma/' + projectId + '/codegen' +
+                    (selectedFrameId ? `?frame_id=${selectedFrameId}` : '')
+                  )}
+                >
+                  Generate Code
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Back to Dashboard
+                </Button>
+              </div>
+            </div>
+          </SpotlightCard>
         </div>
 
-        {/* Error */}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -155,14 +207,12 @@ export default function FigmaProjectDetailPage() {
           </motion.div>
         )}
 
-        {/* Rendering indicator */}
         {rendering && (
-          <div className="mb-4 text-xs text-muted-foreground animate-pulse">
-            Rendering images...
+          <div className="mb-4 text-sm text-muted-foreground animate-pulse">
+            Rendering images... please wait.
           </div>
         )}
 
-        {/* Parser Panels */}
         <SpotlightCard className="rounded-2xl">
           <div className="glass rounded-2xl p-5">
             <FigmaParserPanels
@@ -184,4 +234,3 @@ export default function FigmaProjectDetailPage() {
     </PageTransition>
   )
 }
-

@@ -18,11 +18,11 @@ from app.routers.auth import router as auth_router
 from app.routers.projects import router as projects_router
 from app.routers.oauth_google import router as oauth_google_router
 from app.routers.figma import router as figma_router
+from app.routers.code_generation import router as code_generation_router
 
 
 
 from app.services.mongo_health import ping_mongo
-
 
 
 
@@ -127,11 +127,11 @@ def create_app() -> FastAPI:
 
 
 
-
     app.include_router(auth_router, prefix=settings.api_prefix)
     app.include_router(projects_router, prefix=settings.api_prefix)
     app.include_router(oauth_google_router, prefix=settings.api_prefix)
     app.include_router(figma_router, prefix=settings.api_prefix)
+    app.include_router(code_generation_router, prefix=settings.api_prefix)
 
 
 
@@ -157,6 +157,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
-
-

@@ -17,10 +17,11 @@ export function FigmaProjectCard({ project, onClick, onDelete }: Props) {
 
   return (
     <motion.button
+      type="button"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className="text-left w-full rounded-2xl border border-white/10 bg-white/5 p-4 hover:border-indigo-500/40 transition-all duration-200 group"
+      className="text-left w-full rounded-2xl border border-white/10 bg-white/5 p-4 hover:border-indigo-500/40 hover:-translate-y-0.5 transition-all duration-200 group"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -40,6 +41,7 @@ export function FigmaProjectCard({ project, onClick, onDelete }: Props) {
         </div>
         {onDelete && (
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation()
               onDelete()

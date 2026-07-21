@@ -50,6 +50,25 @@ export default function DashboardPage() {
   const [figmaStep, setFigmaStep] = useState<string | null>(null)
   const [figmaResult, setFigmaResult] = useState<FigmaImportResponse | null>(null)
 
+  const totalFigmaComponents = figmaProjects.reduce(
+    (sum, project) => sum + (project.stats?.total_components ?? 0),
+    0
+  )
+  const totalFigmaColors = figmaProjects.reduce(
+    (sum, project) => sum + (project.stats?.total_colors ?? 0),
+    0
+  )
+
+  const topStats = [
+    { label: 'Total Projects', value: `${projects.length}`, icon: '📁' },
+    { label: 'Imported Figma Files', value: `${figmaProjects.length}`, icon: '🎨' },
+  ]
+
+  const bottomStats = [
+    { label: 'Components Generated', value: `${totalFigmaComponents}`, icon: '🧩' },
+    { label: 'Colors Extracted', value: `${totalFigmaColors}`, icon: '🎨' },
+  ]
+
   async function refresh() {
     setLoading(true)
     setError(null)
@@ -159,12 +178,12 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        <div className="grid lg:grid-cols-[280px_1fr] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)] gap-8">
           {/* Sidebar */}
-          <aside className="space-y-6">
+          <aside className="space-y-6 lg:sticky lg:top-24">
             {/* Stats mini-cards */}
-            <div className="grid grid-cols-2 gap-3">
-              {statsCards.slice(0, 2).map((stat) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {topStats.map((stat) => (
                 <SpotlightCard key={stat.label} className="rounded-xl">
                   <div className="glass rounded-xl p-3 text-center">
                     <div className="text-lg">{stat.icon}</div>
@@ -259,7 +278,7 @@ export default function DashboardPage() {
             {/* Figma Projects */}
             {figmaProjectsLoading ? (
               <AILoadingState lines={2} />
-            ) : figmaProjects.length > 0 && (
+            ) : figmaProjects.length > 0 ? (
               <SpotlightCard className="rounded-2xl">
                 <div className="glass rounded-2xl p-5">
                   <h3 className="font-display font-semibold text-sm mb-3">Imported Projects</h3>
@@ -278,6 +297,13 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </SpotlightCard>
+            ) : (
+              <SpotlightCard className="rounded-2xl">
+                <div className="glass rounded-2xl p-5 text-sm text-muted-foreground">
+                  <div className="font-display font-semibold text-sm mb-2">No imported Figma projects yet.</div>
+                  <p>Connect your Figma token and import a file to see parsed design projects here.</p>
+                </div>
+              </SpotlightCard>
             )}
           </aside>
 
@@ -286,7 +312,7 @@ export default function DashboardPage() {
             {/* Create project */}
             <SpotlightCard className="rounded-2xl">
               <div className="glass rounded-2xl p-5">
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <Input
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
@@ -298,6 +324,7 @@ export default function DashboardPage() {
                     onClick={createProject}
                     disabled={creating || !newName.trim()}
                     variant="gradient"
+                    className="w-full sm:w-auto"
                   >
                     {creating ? 'Creating...' : 'Create project'}
                   </Button>
@@ -319,7 +346,7 @@ export default function DashboardPage() {
             {/* Projects list */}
             <SpotlightCard className="rounded-2xl">
               <div className="glass rounded-2xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
+                <div className="px-5 py-4 border-b border-border/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <h3 className="font-display font-semibold">Projects</h3>
                   <span className="text-xs text-muted-foreground">
                     {loading ? 'Loading...' : `${projects.length} total`}
@@ -335,21 +362,21 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     projects.map((p) => (
-                      <div key={p.id} className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
-                        <div className="flex items-center gap-3 min-w-0">
+                      <div key={p.id} className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 flex items-center justify-center shrink-0">
                             <span className="text-sm font-semibold text-indigo-300">{p.name[0]?.toUpperCase()}</span>
                           </div>
                           <div className="min-w-0">
                             <div className="font-medium text-sm truncate">{p.name}</div>
                             <div className="text-xs text-muted-foreground">Created {new Date(p.created_at).toLocaleDateString()}</div>
-                        </div>
                           </div>
+                        </div>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => deleteProject(p.id)}
-                          className="text-muted-foreground hover:text-red-400 shrink-0"
+                          className="text-muted-foreground hover:text-red-400 shrink-0 self-stretch sm:self-auto"
                         >
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -363,8 +390,8 @@ export default function DashboardPage() {
             </SpotlightCard>
 
             {/* Bottom stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {statsCards.slice(2).map((stat) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+              {bottomStats.map((stat) => (
                 <SpotlightCard key={stat.label} className="rounded-xl">
                   <div className="glass rounded-xl p-3 text-center">
                     <div className="text-lg">{stat.icon}</div>
@@ -373,7 +400,7 @@ export default function DashboardPage() {
                   </div>
                 </SpotlightCard>
               ))}
-          </div>
+            </div>
           </div>
         </div>
       </section>
