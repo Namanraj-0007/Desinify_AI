@@ -12,7 +12,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 function getToken() {
-  return localStorage.getItem('token')
+  return localStorage.getItem('access_token') ?? localStorage.getItem('token')
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -32,19 +32,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const res = await API.post('/auth/signup', { name, email, password })
 
         if (res.data?.access_token) {
-          localStorage.setItem('token', res.data.access_token)
-          setToken(res.data.access_token)
+          const token = res.data.access_token
+          localStorage.setItem('access_token', token)
+          localStorage.setItem('token', token)
+          setToken(token)
         }
       },
       async login(email, password) {
         const res = await API.post('/auth/login', { email, password })
 
         if (res.data?.access_token) {
-          localStorage.setItem('token', res.data.access_token)
-          setToken(res.data.access_token)
+          const token = res.data.access_token
+          localStorage.setItem('access_token', token)
+          localStorage.setItem('token', token)
+          setToken(token)
         }
       },
       logout() {
+        localStorage.removeItem('access_token')
         localStorage.removeItem('token')
         setToken(null)
       }

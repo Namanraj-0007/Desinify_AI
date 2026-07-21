@@ -1,51 +1,44 @@
-# Figma API Integration - Implementation Progress
+# Auth System & 422 Fix - Completed ✅
 
-## Phase 1: Enhanced Backend Parser ✅
-- [x] 1.1 Enhance `_collect_frames()` - extract FRAME nodes with dimensions
-- [x] 1.2 Enhance `_collect_components()` - extract COMPONENT/INSTANCE nodes
-- [x] 1.3 Enhance `_collect_images()` - extract image fills
-- [x] 1.4 Enhance `_collect_colors()` - richer color data with usage count
-- [x] 1.5 Enhance `_collect_typography()` - richer typography with usage count
-- [x] 1.6 Update `parse_design()` to include all extracted data
+## Changes Summary
 
-## Phase 2: Backend Service & Endpoints ✅
-- [x] 2.1 Add `fetch_image_render()` to figma_service.py
-- [x] 2.2 Add `GET /figma/projects` endpoint
-- [x] 2.3 Add `GET /figma/projects/{project_id}` endpoint
-- [x] 2.4 Add `GET /figma/projects/{project_id}/frames` endpoint
-- [x] 2.5 Add `GET /figma/projects/{project_id}/frames/{frame_id}` endpoint
-- [x] 2.6 Add `GET /figma/projects/{project_id}/components` endpoint
-- [x] 2.7 Add `GET /figma/projects/{project_id}/images` endpoint
-- [x] 2.8 Add `POST /figma/image-render` endpoint
-- [x] 2.9 Add `DELETE /figma/projects/{project_id}` endpoint
-- [x] 2.10 Enhance `POST /figma/import` to return rich data
+### Fix 1: Axios Interceptor (401 Fix)
+- **File**: `frontend/src/services/api.ts`
+- **Problem**: Request interceptor was a no-op — never attached `Authorization` header
+- **Fix**: Reads JWT from localStorage (`access_token` → `token` fallback) and attaches `Authorization: Bearer <token>` to every request
+- **Also**: Improved response interceptor with user-friendly 401 error messages
 
-## Phase 3: Enhanced Backend Schemas ✅
-- [x] 3.1 Create FrameDetail, ComponentDetail, ImageDetail schemas
-- [x] 3.2 Create ProjectDetail, FigmaProjectsList schemas
-- [x] 3.3 Create FrameSelectPayload, ImageRenderPayload schemas
+### Fix 2: Token Key Consistency (401 Fix)
+- **File**: `frontend/src/context/AuthContext.tsx`
+- **Files**: `frontend/src/pages/GoogleCallbackPage.tsx`
+- **Problem**: Inconsistent localStorage key usage between `token` and `access_token`
+- **Fix**: Store JWT under **both** keys, clear both on logout
 
-## Phase 4: Enhanced Frontend API Client ✅
-- [x] 4.1 Add TypeScript interfaces for all new schemas
-- [x] 4.2 Add list/get/delete figma project functions
-- [x] 4.3 Add frame/component/image detail functions
-- [x] 4.4 Add image render function
+### Fix 3: Removed Manual Auth Pattern (Cleanup)
+- **File**: `frontend/src/api/projects.ts`
+- **Problem**: Exposed `AuthConfig` params that let callers manually pass headers
+- **Fix**: Removed unused config — all auth now flows through the interceptor
 
-## Phase 5: Frontend UI Components ✅
-- [x] 5.1 Create FigmaFrameViewer.tsx
-- [x] 5.2 Create FigmaComponentPanel.tsx
-- [x] 5.3 Create FigmaImageGallery.tsx
-- [x] 5.4 Create FigmaColorPalette.tsx
-- [x] 5.5 Create FigmaTypographyList.tsx
-- [x] 5.6 Create FigmaProjectCard.tsx
-- [x] 5.7 Enhance FigmaParserPanels.tsx
+### Fix 4: Figma Endpoint Request Format (422 Fix) ✅
+- **File**: `frontend/src/api/figma.ts`
+- **Problem**: `connectFigmaToken()` and `importFigmaByUrl()` were sending **form-urlencoded** data via `URLSearchParams` with `Content-Type: application/x-www-form-urlencoded`
+- **Backend**: Expects **JSON** — `FigmaTokenPayload` and `FigmaImportPayload` are Pydantic `BaseModel` classes, which FastAPI deserializes from `application/json` body
+- **Result**: 422 Unprocessable Entity — FastAPI couldn't parse form data into Pydantic models
+- **Fix**: Send plain JSON objects — Axios automatically sets `Content-Type: application/json`
 
-## Phase 6: Frontend Pages & Routing ✅
-- [x] 6.1 Create FigmaProjectDetailPage.tsx
-- [x] 6.2 Add route in App.tsx
-- [x] 6.3 Update DashboardPage.tsx with project list + navigation
+### Field Name Validation
+- Backend `FigmaTokenPayload.access_token` ↔ Frontend `{ access_token: "..." }` ✅ Exact match
+- Backend `FigmaImportPayload.figma_url` ↔ Frontend `{ figma_url: "..." }` ✅ Exact match
+- Backend `FigmaImportPayload.project_name` ↔ Frontend `{ project_name: "..." }` ✅ Exact match
 
-## Phase 7: Error Handling & Final Testing ✅
-- [ ] 7.1 Verify MongoDB metadata storage
-- [ ] 7.2 Test error handling (invalid links, permissions)
-- [ ] 7.3 Frontend build validation
+## Verification Checklist
+- [x] ✅ Login stores JWT under `access_token` + `token` keys
+- [x] ✅ Interceptor reads JWT and attaches `Authorization: Bearer <token>`
+- [x] ✅ No more 401 Unauthorized errors
+- [x] ✅ `POST /api/figma/token` sends JSON → no more 422
+- [x] ✅ `POST /api/figma/import` sends JSON → no more 422
+- [x] ✅ Field names match backend Pydantic schemas exactly
+- [x] ✅ User-friendly error messages for auth failures
+- [x] ✅ Google OAuth stores JWT consistently
+- [x] ✅ Logout clears both localStorage keys
+

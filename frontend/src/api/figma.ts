@@ -115,24 +115,18 @@ export type ImageRenderResult = {
 // ─── API Functions ────────────────────────────────────────────────
 
 export async function connectFigmaToken(accessToken: string): Promise<ConnectFigmaResponse> {
-  const form = new URLSearchParams()
-  form.set('access_token', accessToken)
-
-  const res = await API.post('/figma/token', form, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-  })
+  // Send as JSON to match Pydantic BaseModel expectation on the backend
+  const res = await API.post('/figma/token', { access_token: accessToken })
   return res.data
 }
 
 export type ImportByUrlPayload = { figma_url: string; project_name?: string }
 
 export async function importFigmaByUrl(payload: ImportByUrlPayload): Promise<FigmaImportResponse> {
-  const form = new URLSearchParams()
-  form.set('figma_url', payload.figma_url)
-  if (payload.project_name) form.set('project_name', payload.project_name)
-
-  const res = await API.post('/figma/import', form, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  // Send as JSON to match Pydantic BaseModel expectation on the backend
+  const res = await API.post('/figma/import', {
+    figma_url: payload.figma_url,
+    project_name: payload.project_name,
   })
   return res.data
 }

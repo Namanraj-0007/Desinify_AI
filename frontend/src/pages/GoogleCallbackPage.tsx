@@ -24,6 +24,7 @@ export default function GoogleCallbackPage() {
         const accessToken = (res.data as any).access_token as string | undefined
         if (!accessToken) throw new Error('Google sign-in did not return token')
 
+        localStorage.setItem('access_token', accessToken)
         localStorage.setItem('token', accessToken)
         navigate('/dashboard', { replace: true })
       } catch (e: any) {
