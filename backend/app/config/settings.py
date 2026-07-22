@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     google_oauth_token_url: str = 'https://oauth2.googleapis.com/token'
     google_oauth_userinfo_url: str = 'https://www.googleapis.com/oauth2/v2/userinfo'
 
+    # AI / LLM Provider
+    gemini_api_key: str = ''
+    gemini_model: str = 'gemini-2.0-flash-exp'
+    openai_api_key: str = ''
+    openai_model: str = 'gpt-4o'
+
     model_config = SettingsConfigDict(
         # Allow environment variables even if .env isn't loadable in some runners.
         env_file='.env',
@@ -63,6 +69,8 @@ class Settings(BaseSettings):
             'mongodb_uri',
             'jwt_secret',
             'google_oauth_client_secret',
+            'gemini_api_key',
+            'openai_api_key',
         }
 
         for k in list(raw.keys()):
@@ -77,11 +85,7 @@ class Settings(BaseSettings):
             raise RuntimeError(f"Invalid configuration: {key} is empty. Set it in .env")
 
     def dump_env_for_debug(self) -> Dict[str, Any]:
-        """Return raw os.environ values for keys we care about.
-
-        Note: this does not read the .env file itself; it reflects what the
-        running process environment contains after .env loading (if any).
-        """
+        """Return raw os.environ values for keys we care about."""
         import os
 
         keys = [
@@ -96,15 +100,15 @@ class Settings(BaseSettings):
             'GOOGLE_CLIENT_ID',
             'GOOGLE_CLIENT_SECRET',
             'GOOGLE_REDIRECT_URI',
+            'GEMINI_API_KEY',
+            'GEMINI_MODEL',
+            'OPENAI_API_KEY',
+            'OPENAI_MODEL',
         ]
 
         return {k: os.environ.get(k, '') for k in keys}
 
 
-
 # Instantiate once at import time.
-# NOTE: if .env isn't loadable in a given runtime, callers may override via real env vars.
 settings = Settings()
-
-
 

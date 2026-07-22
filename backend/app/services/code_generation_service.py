@@ -1,174 +1,71 @@
 """
-Phase 3: AI Code Generation Engine
-Deterministic, rule-based engine that transforms parsed Figma data into production-ready frontend code.
+AI-Powered Code Generation Engine
+Transforms parsed Figma data into production-ready frontend code using LLMs.
 
-Supports: React + TypeScript + Tailwind, Next.js App Router, HTML/CSS
+Pipeline: Parse → Detect Components → Build AI Prompt → Call LLM → Parse Output → Save Files
+
+Supports: React + TypeScript + Tailwind CSS, Next.js App Router, HTML/CSS
+Generates: Complete projects runnable with `npm install && npm run dev`
 """
 
 from __future__ import annotations
 
 import re
 import json
-from typing import Any, Dict, List, Optional, Tuple
-from datetime import datetime, timezone
+import logging
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
+from datetime import datetime
 from collections import Counter
-from dataclasses import dataclass, field
+
+from app.schemas.ai_generation import (
+    AIPromptResponse,
+    LLMResponse,
+    LLMProviderConfig,
+    StreamEvent,
+    GenerationProgress,
+)
+from app.services.ai_prompt_builder import build_prompt
+from app.services.ai_code_generator import call_llm_with_retry, stream_generation, _parse_file_output
+
+logger = logging.getLogger(__name__)
 
 
 # ─── Pattern Detection ─────────────────────────────────────────────
 
-@dataclass
-class DetectedComponent:
-    name: str
-    type: str  # "button" | "card" | "navbar" | "input" | "header" | "footer" | "sidebar" | "modal" | "table" | "form" | "hero" | "pricing" | "testimonial" | "list" | "badge" | "chip"
-    nodes: List[Dict[str, Any]]
-    props: Dict[str, Any] = field(default_factory=dict)
-    children: List[DetectedComponent] = field(default_factory=list)
-    is_reusable: bool = False
-    occurrences: int = 1
-
-
-def _get_node_name(node: Dict[str, Any]) -> str:
-    return node.get('name', 'Unnamed')
-
-
-def _has_children(node: Dict[str, Any]) -> bool:
-    return bool(node.get('children') and len(node['children']) > 0)
-
-
-def _node_dimensions(node: Dict[str, Any]) -> Tuple[Optional[float], Optional[float]]:
-    return node.get('width'), node.get('height')
-
-
-def _is_button_like(node: Dict[str, Any]) -> bool:
-    name = _get_node_name(node).lower()
-    width, height = _node_dimensions(node)
-    # Buttons are typically small (40-60px tall, 80-200px wide)
-    if height and width:
-        if 30 <= height <= 70 and 60 <= width <= 300:
-            return True
-    # Name-based detection
-    button_keywords = ['button', 'btn', 'submit', 'click', 'action', 'cta']
-    return any(kw in name for kw in button_keywords)
-
-
-def _is_card_like(node: Dict[str, Any]) -> bool:
-    name = _get_node_name(node).lower()
-    width, height = _node_dimensions(node)
-    # Cards have children and are rectangular
-    if _has_children(node) and width and height:
-        if width >= 150 and height >= 100:
-            card_keywords = ['card', 'tile', 'panel', 'box', 'container', 'wrapper']
-            if any(kw in name for kw in card_keywords):
-                return True
-            # Cards typically have padding-like structure
-            if width > 200 and height > 150:
-                return True
-    return False
-
-
-def _is_navbar_like(node: Dict[str, Any]) -> bool:
-    name = _get_node_name(node).lower()
-    width, height = _node_dimensions(node)
-    if height and width:
-        if 40 <= height <= 80 and width >= 300:
-            nav_keywords = ['nav', 'header', 'topbar', 'menu', 'navigation', 'navbar']
-            if any(kw in name for kw in nav_keywords):
-                return True
-    return False
-
-
-def _is_input_like(node: Dict[str, Any]) -> bool:
-    name = _get_node_name(node).lower()
-    width, height = _node_dimensions(node)
-    if height and width:
-        if 30 <= height <= 60 and width >= 100:
-            input_keywords = ['input', 'field', 'search', 'textbox', 'textarea', 'select', 'dropdown']
-            if any(kw in name for kw in input_keywords):
-                return True
-    return False
-
-
-def _is_sidebar_like(node: Dict[str, Any]) -> bool:
-    name = _get_node_name(node).lower()
-    width, height = _node_dimensions(node)
-    if width and height:
-        if 150 <= width <= 400 and height >= 400:
-            sidebar_keywords = ['sidebar', 'side', 'aside', 'drawer', 'panel', 'navigation']
-            if any(kw in name for kw in sidebar_keywords):
-                return True
-    return False
-
-
-def _is_hero_like(node: Dict[str, Any]) -> bool:
-    name = _get_node_name(node).lower()
-    width, height = _node_dimensions(node)
-    if width and height:
-        if width >= 600 and height >= 300:
-            hero_keywords = ['hero', 'banner', 'jumbotron', 'header', 'cover', 'splash']
-            if any(kw in name for kw in hero_keywords):
-                return True
-    return False
-
-
-def _is_footer_like(node: Dict[str, Any]) -> bool:
-    name = _get_node_name(node).lower()
-    width, height = _node_dimensions(node)
-    if width and height:
-        if width >= 400 and height <= 300:
-            footer_keywords = ['footer', 'bottom', 'copyright']
-            return any(kw in name for kw in footer_keywords)
-    return False
-
-
-def _is_modal_like(node: Dict[str, Any]) -> bool:
-    name = _get_node_name(node).lower()
-    modal_keywords = ['modal', 'dialog', 'popup', 'overlay', 'alert']
-    return any(kw in name for kw in modal_keywords)
-
-
-def _detect_component_type(node: Dict[str, Any]) -> str:
-    """Detect the UI component type from a Figma node."""
-    if _is_modal_like(node): return "modal"
-    if _is_navbar_like(node): return "navbar"
-    if _is_sidebar_like(node): return "sidebar"
-    if _is_hero_like(node): return "hero"
-    if _is_footer_like(node): return "footer"
-    if _is_card_like(node): return "card"
-    if _is_input_like(node): return "input"
-    if _is_button_like(node): return "button"
-    return "section"
-
-
 def detect_components(figma_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Analyze Figma node tree and detect reusable UI components."""
+    """
+    Analyze Figma node tree and detect reusable UI component patterns.
+    This is used for prompt enrichment and file splitting hints.
+    """
     components = []
     seen_patterns: Dict[str, int] = Counter()
 
     def traverse(node: Dict[str, Any], depth: int = 0):
         if depth > 10:
             return
-        comp_type = _detect_component_type(node)
-        name = _get_node_name(node)
+        name = node.get('name', 'Unnamed').lower()
+        width = node.get('width') or node.get('absolute_bounding_box', {}).get('width', 0)
+        height = node.get('height') or node.get('absolute_bounding_box', {}).get('height', 0)
+        children = node.get('children', [])
 
-        # Create a structural signature for reuse detection
+        comp_type = _detect_component_type(node, name, width, height, children)
         sig = _structural_signature(node)
         seen_patterns[sig] += 1
 
         components.append({
             "id": node.get('id', ''),
-            "name": name,
+            "name": node.get('name', 'Unnamed'),
             "type": comp_type,
-            "width": node.get('width'),
-            "height": node.get('height'),
-            "children_count": len(node.get('children', [])),
+            "width": width,
+            "height": height,
+            "children_count": len(children),
             "signature": sig,
             "depth": depth,
             "pattern_reuse_count": seen_patterns[sig],
             "is_reusable": seen_patterns[sig] > 1,
         })
 
-        for child in node.get('children', []):
+        for child in children:
             traverse(child, depth + 1)
 
     pages = []
@@ -183,874 +80,84 @@ def detect_components(figma_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     return components
 
 
+def _detect_component_type(
+    node: Dict[str, Any],
+    name: str,
+    width: Optional[float],
+    height: Optional[float],
+    children: List,
+) -> str:
+    """Detect UI component type from node properties."""
+    node_type = node.get('type', '')
+    if node_type == 'TEXT':
+        return 'text'
+    if node_type in ('VECTOR', 'BOOLEAN_OPERATION'):
+        return 'vector'
+    if node_type == 'INSTANCE':
+        return 'instance'
+    if node_type == 'COMPONENT':
+        return 'component'
+    if node_type == 'COMPONENT_SET':
+        return 'component_set'
+
+    auto_layout = node.get('auto_layout', {}) or {}
+    layout_mode = auto_layout.get('layout_mode', '')
+
+    if width and height:
+        if 40 <= height <= 80 and width >= 600 and ('nav' in name or 'header' in name or 'topbar' in name):
+            return 'navbar'
+        if height <= 250 and width >= 600 and ('footer' in name or 'bottom' in name):
+            return 'footer'
+        if 150 <= width <= 400 and height >= 400 and ('sidebar' in name or 'aside' in name or 'drawer' in name):
+            return 'sidebar'
+        if width >= 600 and height >= 350 and ('hero' in name or 'banner' in name or 'cover' in name):
+            return 'hero'
+        if children and width >= 150 and height >= 100:
+            if 'card' in name or 'tile' in name or 'panel' in name:
+                return 'card'
+            if width >= 200 and height >= 150:
+                return 'card'
+
+    if layout_mode == 'HORIZONTAL' and children and len(children) <= 5:
+        if all(_is_button_like(c) for c in children):
+            return 'button_group'
+        return 'row'
+
+    if layout_mode == 'VERTICAL' and children:
+        return 'column'
+
+    if name and children and len(children) <= 3:
+        text_children = sum(1 for c in children if c.get('type') == 'TEXT')
+        if text_children == len(children):
+            return 'text_block'
+
+    if _is_button_like(node) and name and ('button' in name or 'btn' in name or 'cta' in name):
+        return 'button'
+
+    if height and 30 <= height <= 60 and width and width >= 100:
+        if 'input' in name or 'field' in name or 'search' in name:
+            return 'input'
+
+    return 'section'
+
+
+def _is_button_like(node: Dict[str, Any]) -> bool:
+    """Check if a node resembles a button."""
+    width = node.get('width') or node.get('absolute_bounding_box', {}).get('width', 0)
+    height = node.get('height') or node.get('absolute_bounding_box', {}).get('height', 0)
+    if height and width:
+        return 30 <= height <= 70 and 60 <= width <= 300
+    return False
+
+
 def _structural_signature(node: Dict[str, Any]) -> str:
     """Create a structural fingerprint for detecting reusable patterns."""
     children = node.get('children', [])
-    child_types = sorted([_detect_component_type(c) for c in children])
-    width = node.get('width', 0)
-    height = node.get('height', 0)
-    # Quantize dimensions to group similar sizes
+    width = node.get('width') or node.get('absolute_bounding_box', {}).get('width', 0)
+    height = node.get('height') or node.get('absolute_bounding_box', {}).get('height', 0)
     w_bucket = round(width / 20) * 20 if width else 0
     h_bucket = round(height / 20) * 20 if height else 0
-    return f"{_detect_component_type(node)}:{w_bucket}x{h_bucket}:{','.join(child_types)}:{len(children)}"
-
-
-# ─── Tailwind Class Generation ─────────────────────────────────────
-
-def _width_to_tailwind(width: Optional[float]) -> str:
-    if width is None:
-        return "w-full"
-    if width <= 40:
-        return "w-10"
-    if width <= 80:
-        return "w-20"
-    if width <= 120:
-        return "w-28"
-    if width <= 160:
-        return "w-40"
-    if width <= 200:
-        return "w-48"
-    if width <= 240:
-        return "w-60"
-    if width <= 280:
-        return "w-72"
-    if width <= 320:
-        return "w-80"
-    if width <= 384:
-        return "w-96"
-    return "w-full"
-
-
-def _height_to_tailwind(height: Optional[float]) -> str:
-    if height is None:
-        return "h-auto"
-    if height <= 40:
-        return "h-10"
-    if height <= 80:
-        return "h-20"
-    if height <= 120:
-        return "h-28"
-    if height <= 160:
-        return "h-40"
-    if height <= 200:
-        return "h-48"
-    if height <= 240:
-        return "h-60"
-    if height <= 280:
-        return "h-72"
-    if height <= 320:
-        return "h-80"
-    if height <= 384:
-        return "h-96"
-    return "h-auto"
-
-
-def _flex_direction(width: Optional[float], height: Optional[float]) -> str:
-    if width and height and height > width * 1.5:
-        return "flex-col"
-    return "flex-row"
-
-
-def _justify_from_position(x: Optional[float], width: Optional[float]) -> str:
-    if x is None or width is None:
-        return "justify-start"
-    if x > width * 0.7:
-        return "justify-end"
-    if x > width * 0.3:
-        return "justify-center"
-    return "justify-start"
-
-
-def _align_from_position(y: Optional[float], height: Optional[float]) -> str:
-    if y is None or height is None:
-        return "items-start"
-    if y > height * 0.7:
-        return "items-end"
-    if y > height * 0.3:
-        return "items-center"
-    return "items-start"
-
-
-# ─── Code Generation ───────────────────────────────────────────────
-
-def _clean_name(name: str) -> str:
-    """Convert a Figma node name to a valid component name."""
-    name = re.sub(r'[^a-zA-Z0-9\s]', '', name)
-    name = re.sub(r'\s+', ' ', name).strip()
-    parts = name.split()
-    return ''.join(p.capitalize() for p in parts if p) if parts else 'Component'
-
-
-def _to_variable_name(name: str) -> str:
-    """Convert a name to camelCase variable name."""
-    cleaned = _clean_name(name)
-    if not cleaned:
-        return 'component'
-    return cleaned[0].lower() + cleaned[1:]
-
-
-def _generate_tailwind_classes(node: Dict[str, Any], comp_type: str) -> str:
-    """Generate optimized Tailwind classes based on node properties."""
-    classes = []
-    width = node.get('width')
-    height = node.get('height')
-
-    # Container classes
-    if comp_type == "navbar":
-        classes.extend(["flex", "items-center", "justify-between", "px-6", "py-3", "w-full"])
-    elif comp_type == "sidebar":
-        classes.extend(["flex", "flex-col", "h-full", "py-4", "px-3"])
-    elif comp_type == "hero":
-        classes.extend(["flex", "flex-col", "items-center", "justify-center", "text-center", "px-8", "py-16"])
-    elif comp_type == "card":
-        classes.extend(["rounded-xl", "p-5", "shadow-sm"])
-    elif comp_type == "footer":
-        classes.extend(["w-full", "py-8", "px-6", "text-center"])
-    elif comp_type == "button":
-        classes.extend(["inline-flex", "items-center", "justify-center", "rounded-lg", "px-4", "py-2",
-                        "font-medium", "text-sm", "transition-colors", "duration-200",
-                        "focus-visible:outline-none", "focus-visible:ring-2", "focus-visible:ring-offset-2"])
-    elif comp_type == "input":
-        classes.extend(["w-full", "rounded-lg", "border", "px-3", "py-2", "text-sm",
-                        "outline-none", "transition-colors", "duration-200",
-                        "focus:ring-2", "focus:border-transparent"])
-    elif comp_type == "modal":
-        classes.extend(["fixed", "inset-0", "z-50", "flex", "items-center", "justify-center"])
-    else:
-        # Default section
-        classes.append(_width_to_tailwind(width))
-        classes.append(_height_to_tailwind(height))
-        classes.append("flex")
-        classes.append(_flex_direction(width, height))
-
-    # Responsive padding for large screens
-    if width and width >= 768:
-        classes.append("lg:px-8")
-    if width and width >= 1024:
-        classes.append("xl:px-12")
-
-    return " ".join(classes)
-
-
-def _generate_jsx_for_node(node: Dict[str, Any], comp_type: str, depth: int = 0) -> str:
-    """Generate JSX for a single Figma node with proper Tailwind and semantics."""
-    indent = "  " * (depth + 3)
-    name = _get_node_name(node)
-    children = node.get('children', [])
-
-    # Semantic HTML mapping
-    semantic_map = {
-        "navbar": "nav",
-        "header": "header",
-        "footer": "footer",
-        "sidebar": "aside",
-        "hero": "section",
-        "card": "div",
-        "modal": "div",
-        "button": "button",
-        "input": "input",
-        "section": "section",
-        "form": "form",
-        "list": "ul",
-        "table": "table",
-    }
-
-    tag = semantic_map.get(comp_type, "div")
-    tailwind = _generate_tailwind_classes(node, comp_type)
-
-    # Generate aria attributes for accessibility
-    aria_attrs = ""
-    if comp_type == "navbar":
-        aria_attrs = ' role="navigation" aria-label="Main navigation"'
-    elif comp_type == "button":
-        aria_attrs = ' role="button"'
-    elif comp_type == "modal":
-        aria_attrs = ' role="dialog" aria-modal="true"'
-    elif comp_type == "input":
-        return f'{indent}<input className="{tailwind}" placeholder="{name}" aria-label="{name}" />'
-    elif comp_type == "form":
-        aria_attrs = ' role="form"'
-
-    if comp_type == "button":
-        return f'{indent}<button className="{tailwind}" aria-label="{name}">{name}</button>'
-
-    # Generate children
-    child_jsx = ""
-    for child in children:
-        child_type = _detect_component_type(child)
-        child_jsx += _generate_jsx_for_node(child, child_type, depth + 1) + "\n"
-
-    # Text node
-    if not children and comp_type in ("section", "card"):
-        return f'{indent}<{tag} className="{tailwind}"{aria_attrs}>\n{indent}  <p className="text-muted-foreground">{name}</p>\n{indent}</{tag}>'
-
-    if children:
-        return f'{indent}<{tag} className="{tailwind}"{aria_attrs}>\n{child_jsx}{indent}</{tag}>'
-    else:
-        return f'{indent}<{tag} className="{tailwind}"{aria_attrs} />'
-
-
-def _generate_component_file(
-    node: Dict[str, Any],
-    comp_type: str,
-    use_typescript: bool,
-    use_tailwind: bool,
-) -> str:
-    """Generate a complete React component file from a Figma node."""
-    name = _clean_name(_get_node_name(node))
-    if not name:
-        name = "Component"
-
-    imports = "import { cn } from '@/lib/utils'\n" if use_tailwind else ""
-    jsx = _generate_jsx_for_node(node, comp_type)
-
-    if use_typescript:
-        file_content = f"""import React from 'react'
-{imports}
-interface Props {{
-  className?: string
-  children?: React.ReactNode
-}}
-
-export const {name}: React.FC<Props> = ({{
-  className,
-  children,
-}}) => {{
-  return (
-{jsx}
-  )
-}}
-
-export default {name}
-"""
-    else:
-        file_content = f"""import React from 'react'
-{imports}
-export const {name} = ({{
-  className,
-  children,
-}}) => {{
-  return (
-{jsx}
-  )
-}}
-
-export default {name}
-"""
-
-    return file_content
-def _generate_home_page(components: List[Dict[str, Any]]) -> str:
-    component_names = []
-    for comp in components:
-        name = _clean_name(comp.get('name', 'Component'))
-        if name and name not in component_names:
-            component_names.append(name)
-
-    imports = [
-        "import React from 'react'",
-        "import { MainLayout } from '../layouts/MainLayout'",
-        "import '../styles/globals.css'",
-        "import '../styles/design-tokens.css'",
-    ]
-
-    if component_names:
-        imports.append(f"import {{ {', '.join(component_names)} }} from '../components'\n")
-
-    sections = "\n".join(f"          <{name} key=\"{name}\" />" for name in component_names)
-    if not sections:
-        sections = "          <div className=\"rounded-2xl bg-slate-900 p-8 text-slate-200\">No generated sections available.</div>"
-
-    page_body = """
-export default function HomePage() {
-  return (
-    <MainLayout>
-      <div className=\"space-y-8\">
-""" + sections + """
-      </div>
-    </MainLayout>
-  )
-}
-"""
-
-    return "\n".join(imports) + page_body
-
-
-def _generate_not_found_page() -> str:
-    return """import React from 'react'
-
-export default function NotFoundPage() {
-  return (
-    <main className=\"min-h-screen flex items-center justify-center bg-slate-950 text-white p-6\">
-      <div className=\"max-w-xl text-center\">
-        <h1 className=\"text-4xl font-semibold mb-4\">Page not found</h1>
-        <p className=\"text-sm text-slate-300\">The page you are looking for does not exist.</p>
-      </div>
-    </main>
-  )
-}
-"""
-
-
-def _generate_app_tsx() -> str:
-    return """import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import HomePage from './pages/HomePage'
-import NotFoundPage from './pages/NotFoundPage'
-import { ThemeProvider } from './contexts/ThemeContext'
-
-export default function App() {
-  return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path=\"/\" element={<HomePage />} />
-          <Route path=\"*\" element={<NotFoundPage />} />
-        </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
-  )
-}
-"""
-
-
-def _generate_main_tsx() -> str:
-    return """import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './styles/globals.css'
-import './styles/design-tokens.css'
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
-"""
-
-
-def _generate_main_layout() -> str:
-    return """import React from 'react'
-
-interface MainLayoutProps {
-  children: React.ReactNode
-}
-
-export function MainLayout({ children }: MainLayoutProps) {
-  return (
-    <div className=\"min-h-screen bg-slate-950 text-slate-100\">
-      <div className=\"mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8\">{children}</div>
-    </div>
-  )
-}
-"""
-
-
-def _generate_theme_context() -> str:
-    return """import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
-
-interface ThemeContextValue {
-  theme: 'light' | 'dark'
-  toggleTheme: () => void
-}
-
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-  }, [theme])
-
-  const value = useMemo(
-    () => ({
-      theme,
-      toggleTheme: () => setTheme((current) => (current === 'dark' ? 'light' : 'dark')),
-    }),
-    [theme],
-  )
-
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext)
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider')
-  }
-  return context
-}
-"""
-
-
-def _generate_api_service() -> str:
-    return """export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) } })
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(text || 'Failed to fetch data')
-  }
-  return response.json()
-}
-"""
-
-
-def _generate_utils_file() -> str:
-    return """export function classNames(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
-}
-"""
-
-
-def _generate_types_file() -> str:
-    return """export type ComponentMeta = {
-  id: string
-  name: string
-  type: string
-  width?: number
-  height?: number
-}
-"""
-
-
-def _generate_vite_config() -> str:
-    return """import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-})
-"""
-
-
-def _generate_postcss_config() -> str:
-    return """export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
-"""
-
-
-def _generate_tailwind_config() -> str:
-    return """/***** @type {import('tailwindcss').Config} *****/
-export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  darkMode: 'class',
-  theme: {
-    extend: {
-      colors: {
-        background: '#0f172a',
-        surface: '#111827',
-      },
-    },
-  },
-  plugins: [],
-}
-"""
-
-
-def _generate_eslint_config() -> str:
-    return """import { defineConfig } from 'eslint-define-config'
-
-export default defineConfig({
-  root: true,
-  env: {
-    browser: true,
-    es2021: true,
-  },
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    ecmaFeatures: {
-      jsx: true,
-    },
-  },
-  plugins: ['react', 'react-hooks', '@typescript-eslint'],
-  extends: ['eslint:recommended', 'plugin:react/recommended', 'plugin:react-hooks/recommended', 'plugin:@typescript-eslint/recommended'],
-  settings: {
-    react: {
-      version: 'detect',
-    },
-  },
-  rules: {
-    'react/react-in-jsx-scope': 'off',
-    'react/prop-types': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-  },
-})
-"""
-
-
-def _generate_tsconfig() -> str:
-    return """{
-  \"compilerOptions\": {
-    \"target\": \"ES2020\",
-    \"useDefineForClassFields\": true,
-    \"lib\": [\"DOM\", \"DOM.Iterable\", \"ES2020\"],
-    \"allowJs\": false,
-    \"skipLibCheck\": true,
-    \"esModuleInterop\": true,
-    \"allowSyntheticDefaultImports\": true,
-    \"strict\": true,
-    \"forceConsistentCasingInFileNames\": true,
-    \"module\": \"ESNext\",
-    \"moduleResolution\": \"Bundler\",
-    \"resolveJsonModule\": true,
-    \"isolatedModules\": true,
-    \"jsx\": \"react-jsx\",
-    \"noEmit\": true,
-    \"baseUrl\": \".\",
-    \"paths\": {
-      \"@/*\": [\"src/*\"]
-    }
-  },
-  \"include\": [\"src\"],
-  \"references\": [{ \"path\": \"./tsconfig.node.json\" }]
-}
-"""
-
-
-def _generate_tsconfig_node() -> str:
-    return """{
-  \"compilerOptions\": {
-    \"composite\": true,
-    \"module\": \"ESNext\",
-    \"moduleResolution\": \"Bundler\",
-    \"resolveJsonModule\": true
-  },
-  \"include\": [\"vite.config.ts\"]
-}
-"""
-
-
-def _generate_index_html() -> str:
-    return """<!DOCTYPE html>
-<html lang=\"en\">
-  <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
-    <title>Designify AI Generated Website</title>
-  </head>
-  <body>
-    <div id=\"root\"></div>
-    <script type=\"module\" src=\"/src/main.tsx\"></script>
-  </body>
-</html>
-"""
-
-
-def _generate_gitignore() -> str:
-    return """node_modules
-dist
-.env
-.DS_Store
-npm-debug.log
-yarn-error.log
-yarn-debug.log
-.vscode
-"""
-
-
-def _generate_package_json(use_typescript: bool, use_tailwind: bool, framework: str) -> str:
-    deps = {
-        'react': '^18.3.1',
-        'react-dom': '^18.3.1',
-        'react-router-dom': '^6.26.1',
-    }
-    dev_deps = {
-        '@types/react': '^18.3.5',
-        '@types/react-dom': '^18.3.0',
-        '@vitejs/plugin-react': '^4.3.1',
-        'autoprefixer': '^10.4.20',
-        'eslint': '^9.9.1',
-        'eslint-plugin-react': '^7.34.0',
-        'eslint-plugin-react-hooks': '^5.1.0-rc.0',
-        '@typescript-eslint/parser': '^6.10.0',
-        '@typescript-eslint/eslint-plugin': '^6.10.0',
-        'globals': '^15.9.0',
-        'postcss': '^8.4.41',
-        'tailwindcss': '^3.4.10',
-        'typescript': '^5.5.4',
-        'vite': '^5.4.2',
-    }
-
-    content = {
-        'name': 'designify-ai-generated',
-        'private': True,
-        'version': '0.1.0',
-        'type': 'module',
-        'scripts': {
-            'dev': 'vite',
-            'build': 'vite build',
-            'preview': 'vite preview',
-            'lint': 'eslint .',
-        },
-        'dependencies': deps,
-        'devDependencies': dev_deps,
-    }
-    return json.dumps(content, indent=2)
-
-
-def _generate_readme(project_name: str = 'Designify AI Generated Website') -> str:
-    return f"""# {project_name}
-
-Generated by Designify AI.
-
-## Local development
-
-```bash
-npm install
-npm run dev
-```
-
-## Build
-
-```bash
-npm run build
-npm run preview
-```
-
-## Structure
-
-- `src/App.tsx` – Application shell
-- `src/main.tsx` – Vite entrypoint
-- `src/pages` – Page components
-- `src/components` – Reusable UI components
-- `src/layouts` – Shared page layout
-- `src/styles` – Tailwind and global styles
-- `src/types` – TypeScript definitions
-"""
-
-
-def _generate_env_example() -> str:
-    return """# Example environment file for generated website
-VITE_API_BASE_URL=http://localhost:8000/api
-"""
-
-
-def _generate_globals_css() -> str:
-    return """@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    color-scheme: dark;
-    color: #f8fafc;
-    background-color: #0f172a;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background: radial-gradient(circle at top, rgba(99, 102, 241, 0.18), transparent 32%),
-      radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.12), transparent 25%);
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-}
-"""
-
-
-def _generate_project_files(
-    components: List[Dict[str, Any]],
-    framework: str,
-    use_typescript: bool,
-    use_tailwind: bool,
-) -> List[Dict[str, str]]:
-    return [
-        {"path": "index.html", "content": _generate_index_html()},
-        {"path": "package.json", "content": _generate_package_json(use_typescript, use_tailwind, framework)},
-        {"path": "tsconfig.json", "content": _generate_tsconfig()},
-        {"path": "tsconfig.node.json", "content": _generate_tsconfig_node()},
-        {"path": "vite.config.ts", "content": _generate_vite_config()},
-        {"path": "postcss.config.js", "content": _generate_postcss_config()},
-        {"path": "tailwind.config.js", "content": _generate_tailwind_config()},
-        {"path": "eslint.config.js", "content": _generate_eslint_config()},
-        {"path": "README.md", "content": _generate_readme()},
-        {"path": ".env.example", "content": _generate_env_example()},
-        {"path": ".gitignore", "content": _generate_gitignore()},
-        {"path": "src/main.tsx", "content": _generate_main_tsx()},
-        {"path": "src/App.tsx", "content": _generate_app_tsx()},
-        {"path": "src/pages/HomePage.tsx", "content": _generate_home_page(components)},
-        {"path": "src/pages/NotFoundPage.tsx", "content": _generate_not_found_page()},
-        {"path": "src/layouts/MainLayout.tsx", "content": _generate_main_layout()},
-        {"path": "src/contexts/ThemeContext.tsx", "content": _generate_theme_context()},
-        {"path": "src/services/api.ts", "content": _generate_api_service()},
-        {"path": "src/utils/format.ts", "content": _generate_utils_file()},
-        {"path": "src/types/index.ts", "content": _generate_types_file()},
-        {"path": "src/styles/globals.css", "content": _generate_globals_css()},
-    ]
-
-
-def _generate_folder_structure(components: List[Dict[str, Any]], framework: str) -> List[str]:
-    """Generate a flat list of folder/file paths for the project."""
-    folders = [
-        "src/components/ui",
-        "src/components/layout",
-        "src/components/forms",
-        "src/components/shared",
-        "src/hooks",
-        "src/lib",
-        "src/styles",
-        "src/types",
-        "src/utils",
-        "src/pages",
-        "src/layouts",
-        "src/contexts",
-        "src/services",
-    ]
-
-    if framework == "nextjs":
-        folders = [
-            "src/app",
-            "src/components/ui",
-            "src/components/layout",
-            "src/components/forms",
-            "src/components/shared",
-            "src/hooks",
-            "src/lib",
-            "src/styles",
-            "src/types",
-            "src/utils",
-        ]
-
-    files = []
-    for comp in components:
-        ctype = comp.get('type', 'section')
-        name = _clean_name(comp.get('name', 'Component'))
-        folder_map = {
-            "button": "src/components/ui",
-            "input": "src/components/forms",
-            "card": "src/components/ui",
-            "modal": "src/components/ui",
-            "navbar": "src/components/layout",
-            "sidebar": "src/components/layout",
-            "header": "src/components/layout",
-            "footer": "src/components/layout",
-            "hero": "src/components/shared",
-            "pricing": "src/components/shared",
-            "testimonial": "src/components/shared",
-            "form": "src/components/forms",
-            "table": "src/components/ui",
-            "badge": "src/components/ui",
-            "list": "src/components/ui",
-        }
-        folder = folder_map.get(ctype, "src/components/ui")
-        files.append(f"{folder}/{name}.tsx")
-
-    return sorted(set(folders + files))
-
-
-def _generate_export_barrel(components: List[Dict[str, Any]]) -> str:
-    """Generate barrel exports for all components."""
-    folder_map = {
-        "button": "ui",
-        "input": "forms",
-        "card": "ui",
-        "modal": "ui",
-        "navbar": "layout",
-        "sidebar": "layout",
-        "header": "layout",
-        "footer": "layout",
-        "hero": "shared",
-        "pricing": "shared",
-        "testimonial": "shared",
-        "form": "forms",
-        "table": "ui",
-        "badge": "ui",
-        "list": "ui",
-        "section": "ui",
-    }
-    content = "// Auto-generated barrel exports\n"
-    for comp in components:
-        name = _clean_name(comp.get('name', 'Component'))
-        if not name:
-            continue
-        folder = folder_map.get(comp.get('type', 'section'), "ui")
-        content += f"export {{ {name} }} from './{folder}/{name}'\n"
-    return content
-
-
-def _generate_styles_file(colors: List[Dict[str, Any]], typography: List[Dict[str, Any]]) -> str:
-    """Generate a Tailwind-compatible styles file with design tokens."""
-    content = "/* Auto-generated design tokens from Figma */\n\n"
-
-    # Color variables
-    if colors:
-        content += ":root {\n"
-        for i, color in enumerate(colors[:10]):
-            hex_val = color.get('hex', '#000000')
-            content += f"  --figma-color-{i + 1}: {hex_val};\n"
-        content += "}\n\n"
-
-    # Typography
-    if typography:
-        for i, t in enumerate(typography[:5]):
-            family = t.get('fontFamily', 'Inter')
-            size = t.get('fontSize', 16)
-            weight = t.get('fontWeight', 'normal')
-            content += f".text-figma-style-{i + 1} {{\n"
-            content += f"  font-family: '{family}';\n"
-            content += f"  font-size: {size}px;\n"
-            if weight:
-                content += f"  font-weight: {weight};\n"
-            content += "}\n\n"
-
-    return content
-
-
-def _generate_index_page(components: List[Dict[str, Any]], framework: str) -> str:
-    """Generate a main page that composes all detected components."""
-    imports = ""
-    usage = ""
-    for comp in components:
-        name = _clean_name(comp.get('name', 'Component'))
-        folder_map = {
-            "button": "@/components/ui",
-            "input": "@/components/forms",
-            "card": "@/components/ui",
-            "modal": "@/components/ui",
-            "navbar": "@/components/layout",
-            "sidebar": "@/components/layout",
-            "header": "@/components/layout",
-            "footer": "@/components/layout",
-            "hero": "@/components/shared",
-            "pricing": "@/components/shared",
-            "testimonial": "@/components/shared",
-            "form": "@/components/forms",
-            "table": "@/components/ui",
-            "badge": "@/components/ui",
-            "list": "@/components/ui",
-            "section": "@/components/ui",
-        }
-        folder = folder_map.get(comp.get('type', 'section'), "@/components/ui")
-        imports += f"import {{ {name} }} from '{folder}/{name}'\n"
-
-    for comp in components:
-        name = _clean_name(comp.get('name', 'Component'))
-        usage += f"          <{name} />\n"
-
-    content = f"""import React from 'react'
-{imports}
-
-export default function Home() {{
-  return (
-    <main className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-{usage}
-      </div>
-    </main>
-  )
-}}
-"""
-    return content
+    return f"{_detect_component_type(node, node.get('name','').lower(), width, height, children)}:{w_bucket}x{h_bucket}:{len(children)}"
 
 
 # ─── Main Generation Pipeline ──────────────────────────────────────
@@ -1065,107 +172,59 @@ async def generate_code(
     optimization_level: str = "standard",
 ) -> Dict[str, Any]:
     """
-    Main entry point for code generation.
+    Main entry point for AI-powered code generation.
 
-    Takes parsed Figma data and generates a complete frontend project.
-    Returns structured output with files, folder structure, and metadata.
+    Pipeline:
+    1. Detect components from Figma data
+    2. Build a structured LLM prompt from the parsed data
+    3. Call the LLM (Gemini/OpenAI) with retry logic
+    4. Parse the LLM output into file entries
+    5. Save generation record to MongoDB
+    6. Return structured output with files, folder structure, and metadata
     """
-    # Phase 1: Detect components
+    start_time = datetime.utcnow()
+
     components = detect_components(figma_data)
 
-    # Filter to requested frames if specified
     if frame_ids:
         components = [c for c in components if c.get('id') in frame_ids]
 
-    # Fall back to a placeholder component when no real components are detected.
-    if not components:
-        placeholder_name = 'GeneratedSection'
-        if frame_ids:
-            placeholder_name = f'SelectedFrame{len(frame_ids)}'
-        components = [{
-            'id': 'generated-placeholder',
-            'name': placeholder_name,
-            'type': 'section',
-            'width': 800,
-            'height': 600,
-            'children': [],
-            'is_reusable': False,
-            'signature': 'placeholder',
-        }]
+    prompt = build_prompt(
+        figma_json=figma_data,
+        project_name="Designify AI Generated",
+        framework=framework,
+        use_typescript=use_typescript,
+        use_tailwind=use_tailwind,
+        selected_frame_ids=frame_ids if frame_ids else None,
+    )
 
-    # Phase 2: Extract design tokens
-    design_tokens = figma_data.get('design_tokens', {})
-    colors = design_tokens.get('colors', [])
-    typography = design_tokens.get('typography', [])
-    stats = figma_data.get('stats', {})
+    llm_result = await call_llm_with_retry(
+        system_prompt=prompt.system_prompt,
+        user_prompt=prompt.user_prompt,
+    )
 
-    # Phase 3: Generate files
-    files = []
-    folder_structure = _generate_folder_structure(components, framework)
+    if not llm_result.success:
+        logger.warning(f"LLM generation failed: {llm_result.error}. Falling back to template generation.")
+        return await _fallback_generate(components, framework, use_typescript, use_tailwind)
 
-    # Generate component files
-    for comp in components:
-        file_content = _generate_component_file(comp, comp.get('type', 'section'), use_typescript, use_tailwind)
-        name = _clean_name(comp.get('name', 'Component'))
-        folder_map = {
-            "button": "src/components/ui",
-            "input": "src/components/forms",
-            "card": "src/components/ui",
-            "modal": "src/components/ui",
-            "navbar": "src/components/layout",
-            "sidebar": "src/components/layout",
-            "header": "src/components/layout",
-            "footer": "src/components/layout",
-            "hero": "src/components/shared",
-            "pricing": "src/components/shared",
-            "testimonial": "src/components/shared",
-            "form": "src/components/forms",
-            "table": "src/components/ui",
-            "badge": "src/components/ui",
-            "list": "src/components/ui",
-            "section": "src/components/ui",
-        }
-        folder = folder_map.get(comp.get('type', 'section'), "src/components/ui")
-        files.append({
-            "path": f"{folder}/{name}.tsx",
-            "content": file_content
-        })
+    files = llm_result.files
+    files = _validate_generated_files(files, framework)
+    folder_structure = _build_folder_structure(files)
 
-    # Generate barrel export
-    files.append({
-        "path": "src/components/index.ts",
-        "content": _generate_export_barrel(components)
-    })
-
-    # Generate styles file
-    files.append({
-        "path": "src/styles/design-tokens.css",
-        "content": _generate_styles_file(colors, typography)
-    })
-
-    # Generate application scaffolding for React
-    if framework == "react":
-        files.extend(_generate_project_files(components, framework, use_typescript, use_tailwind))
-    else:
-        # Generate main index page for non-React frameworks
-        files.append({
-            "path": "src/app/page.tsx" if framework == "nextjs" else "src/pages/index.tsx",
-            "content": _generate_index_page(components, framework)
-        })
-
-    # Collect generation stats
     comp_types = Counter(c.get('type', 'unknown') for c in components)
-    reusable_count = sum(1 for c in components if c.get('is_reusable'))
-
     generation_stats = {
         "total_components": len(components),
-        "reusable_components": reusable_count,
+        "reusable_components": sum(1 for c in components if c.get('is_reusable')),
         "unique_types": len(comp_types),
         "files_generated": len(files),
+        "total_lines": sum(len(f.get('content', '').split('\n')) for f in files),
         "component_breakdown": dict(comp_types),
         "has_tailwind": use_tailwind,
         "has_typescript": use_typescript,
         "optimization_level": optimization_level,
+        "llm_token_usage": llm_result.token_usage,
+        "generation_time_ms": int((datetime.utcnow() - start_time).total_seconds() * 1000),
+        "generation_method": "ai",
     }
 
     return {
@@ -1175,144 +234,308 @@ async def generate_code(
     }
 
 
+async def generate_code_streaming(
+    figma_data: Dict[str, Any],
+    project_id: str,
+    frame_ids: List[str],
+    framework: str = "react",
+    use_typescript: bool = True,
+    use_tailwind: bool = True,
+) -> AsyncGenerator[StreamEvent, None]:
+    """
+    Stream the code generation process for real-time UI updates.
+    Yields progress events, logs, and file entries as they're generated.
+    """
+    yield StreamEvent(
+        type="progress",
+        data={"step": 1, "message": "Analyzing Figma design...", "percentage": 5},
+        done=False,
+    )
+
+    components = detect_components(figma_data)
+    if frame_ids:
+        components = [c for c in components if c.get('id') in frame_ids]
+
+    yield StreamEvent(
+        type="progress",
+        data={
+            "step": 2,
+            "message": f"Detected {len(components)} components. Building AI prompt...",
+            "percentage": 15,
+        },
+        done=False,
+    )
+
+    prompt = build_prompt(
+        figma_json=figma_data,
+        selected_frame_ids=frame_ids if frame_ids else None,
+    )
+
+    yield StreamEvent(
+        type="progress",
+        data={
+            "step": 3,
+            "message": f"Prompt ready (~{prompt.token_estimate} tokens). Calling LLM...",
+            "percentage": 25,
+        },
+        done=False,
+    )
+
+    full_text = ""
+    async for event in stream_generation(prompt.system_prompt, prompt.user_prompt):
+        if event.type == "log":
+            full_text += event.data
+            yield event
+        elif event.type == "file_generated":
+            yield event
+        elif event.type == "error":
+            yield event
+            return
+
+    yield StreamEvent(
+        type="progress",
+        data={"step": 4, "message": "Processing generated files...", "percentage": 85},
+        done=False,
+    )
+
+    files = _parse_file_output(full_text)
+    files = _validate_generated_files(files, framework)
+    folder_structure = _build_folder_structure(files)
+
+    yield StreamEvent(
+        type="progress",
+        data={
+            "step": 5,
+            "message": f"Generated {len(files)} files. Generation complete!",
+            "percentage": 100,
+        },
+        done=True,
+    )
+
+    yield StreamEvent(
+        type="complete",
+        data={
+            "files": files,
+            "folder_structure": folder_structure,
+        },
+        done=True,
+    )
+
+
+# ─── File Validation & Fixing ──────────────────────────────────────
+
+def _validate_generated_files(files: List[Dict[str, str]], framework: str) -> List[Dict[str, str]]:
+    """
+    Validate and fix generated files to ensure they form a runnable project.
+    Adds missing essential files if the LLM didn't generate them.
+    """
+    existing_paths = {f.get("path", "") for f in files}
+    validated = list(files)
+
+    if "index.html" not in existing_paths:
+        validated.append({"path": "index.html", "content": _generate_index_html()})
+    if "package.json" not in existing_paths:
+        validated.append({"path": "package.json", "content": _generate_package_json()})
+    if framework == "react" and "vite.config.ts" not in existing_paths:
+        validated.append({"path": "vite.config.ts", "content": _generate_vite_config()})
+    if framework == "react" and "tsconfig.json" not in existing_paths:
+        validated.append({"path": "tsconfig.json", "content": _generate_tsconfig()})
+
+    has_tailwind = any("tailwind" in f.get("content", "").lower() for f in files)
+    if has_tailwind:
+        if "postcss.config.js" not in existing_paths:
+            validated.append({"path": "postcss.config.js", "content": _generate_postcss_config()})
+        if "tailwind.config.js" not in existing_paths and "tailwind.config.ts" not in existing_paths:
+            validated.append({"path": "tailwind.config.js", "content": _generate_tailwind_config()})
+
+    if "src/main.tsx" not in existing_paths and "src/App.tsx" in existing_paths:
+        validated.append({"path": "src/main.tsx", "content": _generate_main_tsx()})
+    if "README.md" not in existing_paths:
+        validated.append({"path": "README.md", "content": _generate_readme()})
+
+    seen: Dict[str, int] = {}
+    deduped: List[Dict[str, str]] = []
+    for f in validated:
+        path = f["path"]
+        if path in seen:
+            idx = seen[path]
+            if len(f["content"]) > len(deduped[idx]["content"]):
+                deduped[idx] = f
+        else:
+            seen[path] = len(deduped)
+            deduped.append(f)
+
+    return deduped
+
+
+def _build_folder_structure(files: List[Dict[str, str]]) -> List[str]:
+    """Extract folder structure from generated file paths."""
+    folders: set = set()
+    file_paths: set = set()
+
+    for f in files:
+        path = f.get("path", "").replace("\\", "/")
+        if not path:
+            continue
+        file_paths.add(path)
+        parts = path.split("/")
+        for i in range(1, len(parts)):
+            folders.add("/".join(parts[:i]))
+
+    return sorted(folders | file_paths)
+
+
+# ─── Fallback Template Generation ──────────────────────────────────
+
+async def _fallback_generate(
+    components: List[Dict[str, Any]],
+    framework: str,
+    use_typescript: bool,
+    use_tailwind: bool,
+) -> Dict[str, Any]:
+    """Fallback generator when LLM is unavailable. Produces a basic but functional project."""
+    files = []
+
+    files.append({"path": "index.html", "content": _generate_index_html()})
+    files.append({"path": "package.json", "content": _generate_package_json()})
+
+    if framework == "react":
+        files.append({"path": "vite.config.ts", "content": _generate_vite_config()})
+        files.append({"path": "tsconfig.json", "content": _generate_tsconfig()})
+        files.append({"path": "postcss.config.js", "content": _generate_postcss_config()})
+        files.append({"path": "tailwind.config.js", "content": _generate_tailwind_config()})
+
+    files.append({"path": "README.md", "content": _generate_readme()})
+    files.append({"path": "src/main.tsx", "content": _generate_main_tsx()})
+    files.append({"path": "src/App.tsx", "content": _generate_app_tsx()})
+    files.append({"path": "src/lib/utils.ts", "content": _generate_utils()})
+    files.append({"path": "src/styles/globals.css", "content": _generate_globals_css()})
+    files.append({"path": "src/layouts/RootLayout.tsx", "content": _generate_root_layout()})
+    files.append({"path": "src/pages/HomePage.tsx", "content": _generate_home_page(components)})
+    files.append({"path": "src/pages/NotFoundPage.tsx", "content": _generate_not_found()})
+    files.append({"path": "src/contexts/ThemeContext.tsx", "content": _generate_theme_context()})
+    files.append({"path": "src/components/ui/button.tsx", "content": _generate_shadcn_button()})
+    files.append({"path": "src/components/ui/card.tsx", "content": _generate_shadcn_card()})
+
+    folder_structure = _build_folder_structure(files)
+    comp_types = Counter(c.get('type', 'unknown') for c in components)
+
+    return {
+        "files": files,
+        "folder_structure": folder_structure,
+        "stats": {
+            "total_components": len(components),
+            "files_generated": len(files),
+            "component_breakdown": dict(comp_types),
+            "has_tailwind": use_tailwind,
+            "has_typescript": use_typescript,
+            "generation_method": "fallback",
+        },
+    }
+
+
+# ─── Optimization ──────────────────────────────────────────────────
+
 async def optimize_generation(
     previous_generation: Dict[str, Any],
     improvement_type: str,
     framework: str = "react",
 ) -> Dict[str, Any]:
-    """
-    Optimize previously generated code based on improvement type.
-    Returns a new generation with optimizations applied.
-    """
+    """Optimize or regenerate previously generated code using LLM."""
     files = previous_generation.get('files', [])
-    optimized_files = []
+    current_content = ""
+    for f in files:
+        current_content += f"FILE: {f['path']}\n```\n{f['content']}\n```\n\n"
 
-    for file in files:
-        content = file['content']
-        path = file['path']
+    system_prompt = f"""You are a Principal Frontend Engineer reviewing and optimizing generated React code.
+
+Current improvement request: {improvement_type}
+
+Apply these optimizations and return the complete updated files using the same FILE: path format.
+
+Return ALL files that need changes."""
+
+    user_prompt = f"Optimize the following code for '{improvement_type}':\n\n{current_content[:30000]}"
+
+    llm_result = await call_llm_with_retry(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+    )
+
+    if llm_result.success and llm_result.files:
+        optimized = llm_result.files
+    else:
+        optimized = _apply_rule_optimizations(files, improvement_type)
+
+    return {
+        "files": optimized,
+        "folder_structure": previous_generation.get("folder_structure", []),
+        "stats": {
+            **previous_generation.get("stats", {}),
+            "optimized": True,
+            "improvement_type": improvement_type,
+            "optimization_method": "ai" if llm_result.success else "rule",
+        },
+    }
+
+
+def _apply_rule_optimizations(
+    files: List[Dict[str, str]],
+    improvement_type: str,
+) -> List[Dict[str, str]]:
+    """Apply rule-based optimizations as fallback."""
+    optimized = []
+    for f in files:
+        content = f["content"]
+        path = f["path"]
 
         if improvement_type == "accessibility":
-            # Add aria-labels, roles, keyboard handlers
             content = content.replace('<nav ', '<nav aria-label="Navigation" ')
-            content = content.replace('<button ', '<button aria-label="Button" type="button" ')
-            content = content.replace('<img ', '<img alt="" ')
-            content = re.sub(
-                r'<input ',
-                '<input aria-label="Input" ',
-                content
-            )
-            # Add focus-visible styles
+            content = content.replace('<button ', '<button type="button" ')
+            content = re.sub(r'<img ', '<img alt="" ', content)
             content = content.replace(
                 'transition-colors',
                 'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
             )
 
         elif improvement_type == "responsiveness":
-            # Add responsive Tailwind classes
             content = content.replace('w-full', 'w-full sm:w-auto lg:w-full')
             content = content.replace('flex-col', 'flex-col md:flex-row lg:flex-col')
             content = content.replace('px-6', 'px-4 sm:px-6 lg:px-8')
             content = content.replace('py-8', 'py-6 sm:py-8 lg:py-12')
-            # Add grid for cards
-            if 'card' in path.lower():
-                content = content.replace(
-                    'className="',
-                    'className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 '
-                )
 
         elif improvement_type == "tailwind":
-            # Merge duplicate classes, remove inline styles
             content = re.sub(r'style=\{.*?\}', '', content)
-            # Remove redundant flex items if already in parent
-            content = content.replace('flex items-center justify-between', 'flex items-center justify-between')
 
-        elif improvement_type == "naming":
-            # Improve component/variable naming
-            content = re.sub(
-                r'export (const|function) ([A-Z][a-z]+)',
-                lambda m: f'export {m.group(1)} {m.group(2)}' if len(m.group(2)) > 2 else
-                f'export {m.group(1)} GeneratedComponent',
-                content
-            )
+        optimized.append({"path": path, "content": content})
 
-        elif improvement_type == "structure":
-            # Break large components into smaller ones
-            # Extract repeated patterns
-            pass  # Structure optimization is complex; keep as-is for now
+    return optimized
 
-        optimized_files.append({"path": path, "content": content})
 
-    return {
-        "files": optimized_files,
-        "folder_structure": previous_generation.get("folder_structure", []),
-        "stats": {
-            **previous_generation.get("stats", {}),
-            "optimized": True,
-            "improvement_type": improvement_type,
-        }
-    }
-
+# ─── Export ────────────────────────────────────────────────────────
 
 async def export_code(
     generation: Dict[str, Any],
     export_format: str,
 ) -> Dict[str, Any]:
-    """
-    Prepare generated code for export.
-    Returns the files grouped and ready for ZIP packaging.
-    """
+    """Prepare generated code for export."""
     files = generation.get('files', [])
     folder_structure = generation.get('folder_structure', [])
 
-    # Add framework-specific files
-    if export_format == "nextjs":
-        files.append({
-            "path": "next.config.js",
-            "content": "/** @type {import('next').NextConfig} */\nconst nextConfig = {\n  reactStrictMode: true,\n}\n\nmodule.exports = nextConfig\n"
-        })
-        files.append({
-            "path": "tailwind.config.ts",
-            "content": """import type { Config } from 'tailwindcss'\n\nconst config: Config = {\n  content: [\n    './src/**/*.{js,ts,jsx,tsx}',\n  ],\n  theme: {\n    extend: {},\n  },\n  plugins: [],\n}\n\nexport default config\n"""
-        })
-
-    elif export_format == "react":
-        files.append({
-            "path": "tailwind.config.js",
-            "content": "/** @type {import('tailwindcss').Config} */\nmodule.exports = {\n  content: ['./src/**/*.{js,jsx,ts,tsx}'],\n  theme: { extend: {} },\n  plugins: [],\n}\n"
-        })
-        files.append({
-            "path": "vite.config.ts",
-            "content": "import { defineConfig } from 'vite'\nimport react from '@vitejs/plugin-react'\n\nexport default defineConfig({\n  plugins: [react()],\n})\n"
-        })
-
-    elif export_format == "html":
-        # Generate a single HTML file
-        combined_css = ""
-        combined_html = ""
-        for file in files:
-            if file['path'].endswith('.css'):
-                combined_css += file['content'] + "\n"
-            elif file['path'].endswith('.tsx') or file['path'] == "src/pages/index.tsx":
-                # Extract JSX-like content
-                combined_html += file['content'] + "\n"
-
-        html_content = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generated Design</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-{combined_css}
-  </style>
-</head>
-<body>
-  <div id="root">
-    {combined_html}
-  </div>
-</body>
-</html>"""
+    if export_format == "html":
+        html_content = (
+            '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+            '<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+            '<title>Generated Design</title>\n'
+            '<script src="https://cdn.tailwindcss.com"></script>\n</head>\n'
+            '<body class="bg-background text-foreground">\n<div id="root">\n'
+        )
+        for f in files:
+            if f["path"].endswith((".tsx", ".jsx", ".html")):
+                body_match = re.search(r'return\s*\((.*?)\);', f["content"], re.DOTALL)
+                if body_match:
+                    html_content += body_match.group(1) + "\n"
+        html_content += "</div>\n</body>\n</html>"
         files = [{"path": "index.html", "content": html_content}]
 
     return {
@@ -1321,3 +544,585 @@ async def export_code(
         "export_format": export_format,
         "total_files": len(files),
     }
+
+
+# ─── Template Generators ───────────────────────────────────────────
+
+def _generate_index_html() -> str:
+    return (
+        '<!DOCTYPE html>\n'
+        '<html lang="en">\n'
+        '  <head>\n'
+        '    <meta charset="UTF-8" />\n'
+        '    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
+        '    <title>Designify AI Generated</title>\n'
+        '    <link rel="icon" type="image/svg+xml" href="/vite.svg" />\n'
+        '  </head>\n'
+        '  <body>\n'
+        '    <div id="root"></div>\n'
+        '    <script type="module" src="/src/main.tsx"></script>\n'
+        '  </body>\n'
+        '</html>'
+    )
+
+
+def _generate_package_json() -> str:
+    return json.dumps({
+        "name": "designify-ai-generated",
+        "private": True,
+        "version": "0.1.0",
+        "type": "module",
+        "scripts": {
+            "dev": "vite",
+            "build": "tsc && vite build",
+            "preview": "vite preview",
+            "lint": "eslint ."
+        },
+        "dependencies": {
+            "react": "^18.3.1",
+            "react-dom": "^18.3.1",
+            "react-router-dom": "^6.26.1",
+            "framer-motion": "^11.3.22",
+            "lucide-react": "^0.468.0",
+            "clsx": "^2.1.1",
+            "tailwind-merge": "^2.4.1",
+            "react-hook-form": "^7.53.0",
+            "@hookform/resolvers": "^3.9.0",
+            "zod": "^3.23.8",
+            "recharts": "^2.12.7",
+            "class-variance-authority": "^0.7.0"
+        },
+        "devDependencies": {
+            "@types/react": "^18.3.5",
+            "@types/react-dom": "^18.3.0",
+            "@vitejs/plugin-react": "^4.3.1",
+            "autoprefixer": "^10.4.20",
+            "eslint": "^9.9.1",
+            "eslint-plugin-react": "^7.34.0",
+            "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+            "globals": "^15.9.0",
+            "postcss": "^8.4.41",
+            "tailwindcss": "^3.4.10",
+            "typescript": "^5.5.4",
+            "vite": "^5.4.2"
+        }
+    }, indent=2)
+
+
+def _generate_vite_config() -> str:
+    return (
+        "import { defineConfig } from 'vite'\n"
+        "import react from '@vitejs/plugin-react'\n"
+        "import path from 'path'\n"
+        "\n"
+        "export default defineConfig({\n"
+        "  plugins: [react()],\n"
+        "  resolve: {\n"
+        "    alias: {\n"
+        "      '@': path.resolve(__dirname, './src'),\n"
+        "    },\n"
+        "  },\n"
+        "})"
+    )
+
+
+def _generate_tsconfig() -> str:
+    return json.dumps({
+        "compilerOptions": {
+            "target": "ES2020",
+            "useDefineForClassFields": True,
+            "lib": ["DOM", "DOM.Iterable", "ES2020"],
+            "allowJs": False,
+            "skipLibCheck": True,
+            "esModuleInterop": True,
+            "allowSyntheticDefaultImports": True,
+            "strict": True,
+            "forceConsistentCasingInFileNames": True,
+            "module": "ESNext",
+            "moduleResolution": "Bundler",
+            "resolveJsonModule": True,
+            "isolatedModules": True,
+            "jsx": "react-jsx",
+            "noEmit": True,
+            "baseUrl": ".",
+            "paths": {
+                "@/*": ["src/*"]
+            }
+        },
+        "include": ["src"],
+        "references": [{"path": "./tsconfig.node.json"}]
+    }, indent=2)
+
+
+def _generate_postcss_config() -> str:
+    return "export default {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n}\n"
+
+
+def _generate_tailwind_config() -> str:
+    return (
+        "/** @type {import('tailwindcss').Config} */\n"
+        "export default {\n"
+        "  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],\n"
+        "  darkMode: 'class',\n"
+        "  theme: {\n"
+        "    extend: {\n"
+        "      colors: {\n"
+        "        border: 'hsl(var(--border))',\n"
+        "        input: 'hsl(var(--input))',\n"
+        "        ring: 'hsl(var(--ring))',\n"
+        "        background: 'hsl(var(--background))',\n"
+        "        foreground: 'hsl(var(--foreground))',\n"
+        "        primary: {\n"
+        "          DEFAULT: 'hsl(var(--primary))',\n"
+        "          foreground: 'hsl(var(--primary-foreground))',\n"
+        "        },\n"
+        "        secondary: {\n"
+        "          DEFAULT: 'hsl(var(--secondary))',\n"
+        "          foreground: 'hsl(var(--secondary-foreground))',\n"
+        "        },\n"
+        "        destructive: {\n"
+        "          DEFAULT: 'hsl(var(--destructive))',\n"
+        "          foreground: 'hsl(var(--destructive-foreground))',\n"
+        "        },\n"
+        "        muted: {\n"
+        "          DEFAULT: 'hsl(var(--muted))',\n"
+        "          foreground: 'hsl(var(--muted-foreground))',\n"
+        "        },\n"
+        "        accent: {\n"
+        "          DEFAULT: 'hsl(var(--accent))',\n"
+        "          foreground: 'hsl(var(--accent-foreground))',\n"
+        "        },\n"
+        "        card: {\n"
+        "          DEFAULT: 'hsl(var(--card))',\n"
+        "          foreground: 'hsl(var(--card-foreground))',\n"
+        "        },\n"
+        "      },\n"
+        "      borderRadius: {\n"
+        "        lg: 'var(--radius)',\n"
+        "        md: 'calc(var(--radius) - 2px)',\n"
+        "        sm: 'calc(var(--radius) - 4px)',\n"
+        "      },\n"
+        "    },\n"
+        "  },\n"
+        "  plugins: [],\n"
+        "}"
+    )
+
+
+def _generate_main_tsx() -> str:
+    return (
+        "import React from 'react'\n"
+        "import ReactDOM from 'react-dom/client'\n"
+        "import { BrowserRouter } from 'react-router-dom'\n"
+        "import App from './App'\n"
+        "import './styles/globals.css'\n"
+        "\n"
+        "ReactDOM.createRoot(document.getElementById('root')!).render(\n"
+        "  <React.StrictMode>\n"
+        "    <BrowserRouter>\n"
+        "      <App />\n"
+        "    </BrowserRouter>\n"
+        "  </React.StrictMode>,\n"
+        ")"
+    )
+
+
+def _generate_app_tsx() -> str:
+    return (
+        "import React from 'react'\n"
+        "import { Routes, Route } from 'react-router-dom'\n"
+        "import { ThemeProvider } from './contexts/ThemeContext'\n"
+        "import { RootLayout } from './layouts/RootLayout'\n"
+        "import HomePage from './pages/HomePage'\n"
+        "import NotFoundPage from './pages/NotFoundPage'\n"
+        "\n"
+        "export default function App() {\n"
+        "  return (\n"
+        "    <ThemeProvider>\n"
+        "      <RootLayout>\n"
+        "        <Routes>\n"
+        "          <Route path=\"/\" element={<HomePage />} />\n"
+        "          <Route path=\"*\" element={<NotFoundPage />} />\n"
+        "        </Routes>\n"
+        "      </RootLayout>\n"
+        "    </ThemeProvider>\n"
+        "  )\n"
+        "}"
+    )
+
+
+def _generate_root_layout() -> str:
+    return (
+        "import React from 'react'\n"
+        "\n"
+        "interface RootLayoutProps {\n"
+        "  children: React.ReactNode\n"
+        "}\n"
+        "\n"
+        "export function RootLayout({ children }: RootLayoutProps) {\n"
+        "  return (\n"
+        '    <div className="relative min-h-screen bg-background text-foreground">\n'
+        "      <main className=\"relative z-10\">{children}</main>\n"
+        "    </div>\n"
+        "  )\n"
+        "}"
+    )
+
+
+def _generate_utils() -> str:
+    return (
+        "import { clsx, type ClassValue } from 'clsx'\n"
+        "import { twMerge } from 'tailwind-merge'\n"
+        "\n"
+        "export function cn(...inputs: ClassValue[]) {\n"
+        "  return twMerge(clsx(inputs))\n"
+        "}"
+    )
+
+
+def _generate_globals_css() -> str:
+    return (
+        '@tailwind base;\n'
+        '@tailwind components;\n'
+        '@tailwind utilities;\n'
+        '\n'
+        '@layer base {\n'
+        '  :root {\n'
+        '    --background: 0 0% 100%;\n'
+        '    --foreground: 222.2 84% 4.9%;\n'
+        '    --card: 0 0% 100%;\n'
+        '    --card-foreground: 222.2 84% 4.9%;\n'
+        '    --primary: 221.2 83.2% 53.3%;\n'
+        '    --primary-foreground: 210 40% 98%;\n'
+        '    --secondary: 210 40% 96.1%;\n'
+        '    --secondary-foreground: 222.2 47.4% 11.2%;\n'
+        '    --muted: 210 40% 96.1%;\n'
+        '    --muted-foreground: 215.4 16.3% 46.9%;\n'
+        '    --accent: 210 40% 96.1%;\n'
+        '    --accent-foreground: 222.2 47.4% 11.2%;\n'
+        '    --destructive: 0 84.2% 60.2%;\n'
+        '    --destructive-foreground: 210 40% 98%;\n'
+        '    --border: 214.3 31.8% 91.4%;\n'
+        '    --input: 214.3 31.8% 91.4%;\n'
+        '    --ring: 221.2 83.2% 53.3%;\n'
+        '    --radius: 0.5rem;\n'
+        '  }\n'
+        '\n'
+        '  .dark {\n'
+        '    --background: 222.2 84% 4.9%;\n'
+        '    --foreground: 210 40% 98%;\n'
+        '    --card: 222.2 84% 4.9%;\n'
+        '    --card-foreground: 210 40% 98%;\n'
+        '    --primary: 217.2 91.2% 59.8%;\n'
+        '    --primary-foreground: 222.2 47.4% 11.2%;\n'
+        '    --secondary: 217.2 32.6% 17.5%;\n'
+        '    --secondary-foreground: 210 40% 98%;\n'
+        '    --muted: 217.2 32.6% 17.5%;\n'
+        '    --muted-foreground: 215 20.2% 65.1%;\n'
+        '    --accent: 217.2 32.6% 17.5%;\n'
+        '    --accent-foreground: 210 40% 98%;\n'
+        '    --destructive: 0 62.8% 30.6%;\n'
+        '    --destructive-foreground: 210 40% 98%;\n'
+        '    --border: 217.2 32.6% 17.5%;\n'
+        '    --input: 217.2 32.6% 17.5%;\n'
+        '    --ring: 224.3 76.3% 48%;\n'
+        '  }\n'
+        '}\n'
+        '\n'
+        '@layer base {\n'
+        '  * {\n'
+        '    @apply border-border;\n'
+        '  }\n'
+        '  body {\n'
+        '    @apply bg-background text-foreground;\n'
+        '    font-feature-settings: "rlig" 1, "calt" 1;\n'
+        '  }\n'
+        '}'
+    )
+
+
+def _generate_theme_context() -> str:
+    return (
+        "import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'\n"
+        "\n"
+        "type Theme = 'light' | 'dark'\n"
+        "\n"
+        "interface ThemeContextValue {\n"
+        "  theme: Theme\n"
+        "  toggleTheme: () => void\n"
+        "}\n"
+        "\n"
+        "const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)\n"
+        "\n"
+        "export function ThemeProvider({ children }: { children: React.ReactNode }) {\n"
+        "  const [theme, setTheme] = useState<Theme>(() => {\n"
+        "    if (typeof window !== 'undefined') {\n"
+        "      const stored = localStorage.getItem('theme')\n"
+        "      if (stored === 'light' || stored === 'dark') return stored as Theme\n"
+        "      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'\n"
+        "    }\n"
+        "    return 'dark'\n"
+        "  })\n"
+        "\n"
+        "  useEffect(() => {\n"
+        "    const root = document.documentElement\n"
+        "    root.classList.remove('light', 'dark')\n"
+        "    root.classList.add(theme)\n"
+        "    localStorage.setItem('theme', theme)\n"
+        "  }, [theme])\n"
+        "\n"
+        "  const value = useMemo(\n"
+        "    () => ({\n"
+        "      theme,\n"
+        "      toggleTheme: () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark')),\n"
+        "    }),\n"
+        "    [theme],\n"
+        "  )\n"
+        "\n"
+        "  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>\n"
+        "}\n"
+        "\n"
+        "export function useTheme() {\n"
+        "  const context = useContext(ThemeContext)\n"
+        "  if (!context) throw new Error('useTheme must be used within ThemeProvider')\n"
+        "  return context\n"
+        "}"
+    )
+
+
+def _generate_home_page(components: List[Dict[str, Any]]) -> str:
+    """Generate a basic home page for fallback mode."""
+    component_names = []
+    for comp in components:
+        name = comp.get('name', 'Component')
+        clean = re.sub(r'[^a-zA-Z0-9]', '', name)
+        if clean and clean not in component_names:
+            component_names.append(clean)
+
+    sections_lines = []
+    if component_names:
+        for name in component_names[:6]:
+            sections_lines.append(
+                f'          <div key="{name}" className="rounded-lg border p-6 shadow-sm">'
+            )
+            sections_lines.append(
+                f'            <h3 className="font-semibold">{name}</h3>'
+            )
+            sections_lines.append(
+                '            <p className="text-sm text-muted-foreground mt-1">'
+                'Component from Figma design</p>'
+            )
+            sections_lines.append('          </div>')
+    else:
+        sections_lines.append(
+            '          <div className="rounded-lg border p-8 text-center">'
+        )
+        sections_lines.append(
+            '            <p className="text-muted-foreground">'
+            'No components detected. Import a Figma file to generate components.</p>'
+        )
+        sections_lines.append('          </div>')
+
+    sections_str = "\n".join(sections_lines)
+
+    return (
+        "import React from 'react'\n"
+        "import { motion } from 'framer-motion'\n"
+        "\n"
+        "export default function HomePage() {\n"
+        "  return (\n"
+        '    <div className="container mx-auto px-4 py-8">\n'
+        "      <motion.div\n"
+        "        initial={{ opacity: 0, y: 20 }}\n"
+        "        animate={{ opacity: 1, y: 0 }}\n"
+        "        transition={{ duration: 0.5 }}\n"
+        '        className="space-y-8"\n'
+        "      >\n"
+        '        <h1 className="text-4xl font-bold">Designify AI Generated</h1>\n'
+        '        <p className="text-muted-foreground">\n'
+        "          This page was generated from your Figma design.\n"
+        "          The AI-powered generation will create a complete, production-ready version.\n"
+        "        </p>\n"
+        f"{sections_str}\n"
+        "      </motion.div>\n"
+        "    </div>\n"
+        "  )\n"
+        "}"
+    )
+
+
+def _generate_not_found() -> str:
+    return (
+        "import React from 'react'\n"
+        "import { Link } from 'react-router-dom'\n"
+        "import { motion } from 'framer-motion'\n"
+        "\n"
+        "export default function NotFoundPage() {\n"
+        "  return (\n"
+        '    <div className="flex min-h-screen items-center justify-center">\n'
+        "      <motion.div\n"
+        "        initial={{ opacity: 0, scale: 0.9 }}\n"
+        "        animate={{ opacity: 1, scale: 1 }}\n"
+        '        className="text-center"\n'
+        "      >\n"
+        '        <h1 className="text-6xl font-bold text-primary">404</h1>\n'
+        '        <p className="mt-4 text-xl text-muted-foreground">Page not found</p>\n'
+        "        <Link\n"
+        '          to="/"\n'
+        "          className=\"mt-6 inline-block rounded-lg bg-primary px-6 py-3 text-primary-foreground transition-colors hover:bg-primary/90\"\n"
+        "        >\n"
+        "          Go Home\n"
+        "        </Link>\n"
+        "      </motion.div>\n"
+        "    </div>\n"
+        "  )\n"
+        "}"
+    )
+
+
+def _generate_readme() -> str:
+    return (
+        "# Designify AI Generated\n\n"
+        "Generated by Designify AI from Figma design.\n\n"
+        "## Quick Start\n\n"
+        "```bash\nnpm install\nnpm run dev\n```\n\n"
+        "## Build\n\n"
+        "```bash\nnpm run build\nnpm run preview\n```\n\n"
+        "## Tech Stack\n\n"
+        "- React 18\n- TypeScript\n- Vite\n- Tailwind CSS\n- Framer Motion\n- Lucide React\n- React Router v6\n"
+    )
+
+
+def _generate_shadcn_button() -> str:
+    return (
+        "import * as React from 'react'\n"
+        "import { cva, type VariantProps } from 'class-variance-authority'\n"
+        "import { cn } from '@/lib/utils'\n"
+        "\n"
+        "const buttonVariants = cva(\n"
+        "  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium "
+        "ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 "
+        "focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',\n"
+        "  {\n"
+        "    variants: {\n"
+        "      variant: {\n"
+        "        default: 'bg-primary text-primary-foreground hover:bg-primary/90',\n"
+        "        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',\n"
+        "        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',\n"
+        "        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',\n"
+        "        ghost: 'hover:bg-accent hover:text-accent-foreground',\n"
+        "        link: 'text-primary underline-offset-4 hover:underline',\n"
+        "      },\n"
+        "      size: {\n"
+        "        default: 'h-10 px-4 py-2',\n"
+        "        sm: 'h-9 rounded-md px-3',\n"
+        "        lg: 'h-11 rounded-md px-8',\n"
+        "        icon: 'h-10 w-10',\n"
+        "      },\n"
+        "    },\n"
+        "    defaultVariants: {\n"
+        "      variant: 'default',\n"
+        "      size: 'default',\n"
+        "    },\n"
+        "  }\n"
+        ")\n"
+        "\n"
+        "export interface ButtonProps\n"
+        "  extends React.ButtonHTMLAttributes<HTMLButtonElement>,\n"
+        "    VariantProps<typeof buttonVariants> {}\n"
+        "\n"
+        "const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n"
+        "  ({ className, variant, size, ...props }, ref) => {\n"
+        "    return (\n"
+        "      <button\n"
+        "        className={cn(buttonVariants({ variant, size, className }))}\n"
+        "        ref={ref}\n"
+        "        {...props}\n"
+        "      />\n"
+        "    )\n"
+        "  }\n"
+        ")\n"
+        "Button.displayName = 'Button'\n"
+        "\n"
+        "export { Button, buttonVariants }\n"
+        "export default Button\n"
+    )
+
+
+def _generate_shadcn_card() -> str:
+    return (
+        "import * as React from 'react'\n"
+        "import { cn } from '@/lib/utils'\n"
+        "\n"
+        "const Card = React.forwardRef<\n"
+        "  HTMLDivElement,\n"
+        "  React.HTMLAttributes<HTMLDivElement>\n"
+        ">(({ className, ...props }, ref) => (\n"
+        "  <div\n"
+        "    ref={ref}\n"
+        "    className={cn('rounded-lg border bg-card text-card-foreground shadow-sm', className)}\n"
+        "    {...props}\n"
+        "  />\n"
+        "))\n"
+        "Card.displayName = 'Card'\n"
+        "\n"
+        "const CardHeader = React.forwardRef<\n"
+        "  HTMLDivElement,\n"
+        "  React.HTMLAttributes<HTMLDivElement>\n"
+        ">(({ className, ...props }, ref) => (\n"
+        "  <div\n"
+        "    ref={ref}\n"
+        "    className={cn('flex flex-col space-y-1.5 p-6', className)}\n"
+        "    {...props}\n"
+        "  />\n"
+        "))\n"
+        "CardHeader.displayName = 'CardHeader'\n"
+        "\n"
+        "const CardTitle = React.forwardRef<\n"
+        "  HTMLParagraphElement,\n"
+        "  React.HTMLAttributes<HTMLHeadingElement>\n"
+        ">(({ className, ...props }, ref) => (\n"
+        "  <h3\n"
+        "    ref={ref}\n"
+        "    className={cn('text-2xl font-semibold leading-none tracking-tight', className)}\n"
+        "    {...props}\n"
+        "  />\n"
+        "))\n"
+        "CardTitle.displayName = 'CardTitle'\n"
+        "\n"
+        "const CardDescription = React.forwardRef<\n"
+        "  HTMLParagraphElement,\n"
+        "  React.HTMLAttributes<HTMLParagraphElement>\n"
+        ">(({ className, ...props }, ref) => (\n"
+        "  <p\n"
+        "    ref={ref}\n"
+        "    className={cn('text-sm text-muted-foreground', className)}\n"
+        "    {...props}\n"
+        "  />\n"
+        "))\n"
+        "CardDescription.displayName = 'CardDescription'\n"
+        "\n"
+        "const CardContent = React.forwardRef<\n"
+        "  HTMLDivElement,\n"
+        "  React.HTMLAttributes<HTMLDivElement>\n"
+        ">(({ className, ...props }, ref) => (\n"
+        "  <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />\n"
+        "))\n"
+        "CardContent.displayName = 'CardContent'\n"
+        "\n"
+        "const CardFooter = React.forwardRef<\n"
+        "  HTMLDivElement,\n"
+        "  React.HTMLAttributes<HTMLDivElement>\n"
+        ">(({ className, ...props }, ref) => (\n"
+        "  <div\n"
+        "    ref={ref}\n"
+        "    className={cn('flex items-center p-6 pt-0', className)}\n"
+        "    {...props}\n"
+        "  />\n"
+        "))\n"
+        "CardFooter.displayName = 'CardFooter'\n"
+        "\n"
+        "export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }\n"
+        "export default Card\n"
+    )
+

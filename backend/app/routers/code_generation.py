@@ -1,14 +1,19 @@
 """
 Phase 3: AI Code Generation Engine - API Routes
+Supports standard generation, streaming, optimization, export, and ZIP download.
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+import json
+import logging
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
 from bson import ObjectId
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse, Response
+from starlette.responses import StreamingResponse as StarletteStreamingResponse
 
 from app.routers.utils.auth import get_current_user_id
 from app.schemas.code_generation import (
@@ -22,10 +27,14 @@ from app.schemas.code_generation import (
 )
 from app.services.code_generation_service import (
     generate_code,
+    generate_code_streaming,
     optimize_generation,
     export_code,
 )
+from app.services.zip_service import create_project_zip, get_zip_filename
 from app.services.mongo import get_db
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/codegen", tags=["code-generation"])
 
@@ -39,9 +48,8 @@ async def generate(
     payload: GenerateCodeRequest,
     user_id: str = Depends(get_current_user_id),
 ):
-    """Generate frontend code from imported Figma project data."""
+    """Generate frontend code from imported Figma project data using AI."""
     try:
-        # Fetch the project data
         project = await figma_projects_collection.find_one(
             {"_id": ObjectId(payload.project_id), "user_id": user_id}
         )
@@ -55,7 +63,6 @@ async def generate(
             "stats": parsed.get("stats", {}),
         }
 
-        # Generate code
         result = await generate_code(
             figma_data=figma_data,
             project_id=payload.project_id,
@@ -66,13 +73,11 @@ async def generate(
             optimization_level=payload.optimization_level,
         )
 
-        # Determine next version number
         existing_count = await code_generations_collection.count_documents(
             {"project_id": payload.project_id}
         )
         version_number = existing_count + 1
 
-        # Store generation record
         generation_doc = {
             "user_id": user_id,
             "project_id": payload.project_id,
@@ -101,7 +106,7 @@ async def generate(
             tailwind=payload.tailwind,
             files=[FileOutput(**f) for f in result["files"]],
             folder_structure=result["folder_structure"],
-            stats=result["stats"],
+            stats=result.get("stats", {}),
             frame_ids=payload.frame_ids,
             created_at=generation_doc["created_at"],
         )
@@ -109,7 +114,99 @@ async def generate(
     except HTTPException:
         raise
     except Exception as e:
+        logger.exception("Code generation failed")
         raise HTTPException(status_code=500, detail=f"Code generation failed: {str(e)}")
+
+
+@router.post("/generate-stream")
+async def generate_stream(
+    payload: GenerateCodeRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    """Stream code generation events for real-time UI updates (SSE)."""
+    try:
+        project = await figma_projects_collection.find_one(
+            {"_id": ObjectId(payload.project_id), "user_id": user_id}
+        )
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+
+        parsed = project.get("parsed", {})
+        figma_data = {
+            "component_tree": parsed.get("component_tree", {}),
+            "design_tokens": parsed.get("design_tokens", {}),
+            "stats": parsed.get("stats", {}),
+        }
+
+        async def event_stream():
+            full_text = ""
+            files_result = []
+            async for event in generate_code_streaming(
+                figma_data=figma_data,
+                project_id=payload.project_id,
+                frame_ids=payload.frame_ids,
+                framework=payload.framework,
+                use_typescript=payload.typescript,
+                use_tailwind=payload.tailwind,
+            ):
+                data = json.dumps({
+                    "type": event.type,
+                    "data": event.data,
+                    "done": event.done,
+                })
+                yield f"data: {data}\n\n"
+
+                if event.type == "log":
+                    full_text += str(event.data)
+                elif event.type == "file_generated":
+                    files_result.append(event.data)
+                elif event.type == "complete":
+                    # Save generation to MongoDB
+                    try:
+                        existing_count = await code_generations_collection.count_documents(
+                            {"project_id": payload.project_id}
+                        )
+                        version_number = existing_count + 1
+                        gen_doc = {
+                            "user_id": user_id,
+                            "project_id": payload.project_id,
+                            "project_name": project.get("project_name", "Project"),
+                            "figma_file_key": project.get("figma_file_key", ""),
+                            "version_number": version_number,
+                            "framework": payload.framework,
+                            "typescript": payload.typescript,
+                            "tailwind": payload.tailwind,
+                            "optimization_level": payload.optimization_level,
+                            "frame_ids": payload.frame_ids,
+                            "files": files_result,
+                            "folder_structure": [f.get("path", "") for f in files_result],
+                            "stats": {
+                                "files_generated": len(files_result),
+                                "generation_method": "ai_stream",
+                            },
+                            "created_at": datetime.now(timezone.utc).isoformat(),
+                        }
+                        await code_generations_collection.insert_one(gen_doc)
+                    except Exception:
+                        pass
+
+            yield "data: {\"type\": \"done\", \"done\": true}\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Stream generation failed")
+        raise HTTPException(status_code=500, detail=f"Stream generation failed: {str(e)}")
 
 
 @router.get("/history/{project_id}", response_model=VersionHistoryResponse)
@@ -145,6 +242,7 @@ async def get_version_history(
         return VersionHistoryResponse(versions=versions)
 
     except Exception as e:
+        logger.exception("Failed to fetch history")
         raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
 
 
@@ -155,14 +253,12 @@ async def regenerate(
 ):
     """Regenerate/optimize a previous code generation."""
     try:
-        # Fetch the previous generation
         prev = await code_generations_collection.find_one(
             {"_id": ObjectId(payload.generation_id), "user_id": user_id}
         )
         if not prev:
             raise HTTPException(status_code=404, detail="Generation not found")
 
-        # Apply optimizations
         optimized = await optimize_generation(
             previous_generation={
                 "files": prev.get("files", []),
@@ -173,7 +269,6 @@ async def regenerate(
             framework=payload.framework,
         )
 
-        # Store as new version
         existing_count = await code_generations_collection.count_documents(
             {"project_id": prev["project_id"]}
         )
@@ -207,7 +302,7 @@ async def regenerate(
             tailwind=prev.get("tailwind", True),
             files=[FileOutput(**f) for f in optimized["files"]],
             folder_structure=optimized["folder_structure"],
-            stats=optimized["stats"],
+            stats=optimized.get("stats", {}),
             frame_ids=prev.get("frame_ids", []),
             created_at=generation_doc["created_at"],
         )
@@ -215,6 +310,7 @@ async def regenerate(
     except HTTPException:
         raise
     except Exception as e:
+        logger.exception("Optimization failed")
         raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
 
 
@@ -250,7 +346,43 @@ async def export_generation(
     except HTTPException:
         raise
     except Exception as e:
+        logger.exception("Export failed")
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+
+@router.post("/export-zip")
+async def export_generation_zip(
+    payload: ExportRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    """Download a generation as a ZIP file."""
+    try:
+        gen = await code_generations_collection.find_one(
+            {"_id": ObjectId(payload.generation_id), "user_id": user_id}
+        )
+        if not gen:
+            raise HTTPException(status_code=404, detail="Generation not found")
+
+        files = gen.get("files", [])
+        project_name = gen.get("project_name", "designify-project")
+        version = gen.get("version_number", 1)
+        zip_bytes = create_project_zip(files)
+        filename = get_zip_filename(project_name, version)
+
+        return Response(
+            content=zip_bytes,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Length": str(len(zip_bytes)),
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("ZIP export failed")
+        raise HTTPException(status_code=500, detail=f"ZIP export failed: {str(e)}")
 
 
 @router.get("/{generation_id}", response_model=GenerationVersion)
@@ -285,4 +417,6 @@ async def get_generation(
     except HTTPException:
         raise
     except Exception as e:
+        logger.exception("Failed to fetch generation")
         raise HTTPException(status_code=500, detail=str(e))
+

@@ -1,9 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { CodePreview } from '../components/codegen/CodePreview'
 import { CodeGenerationToolbar } from '../components/codegen/CodeGenerationToolbar'
-import { generateCode, getGenerationHistory, regenerateCode, exportGeneration } from '../api/codeGeneration'
-import type { FileOutput, GenerationVersion, GenerateCodeRequest } from '../api/codeGeneration'
+import {
+  generateCode,
+  getGenerationHistory,
+  regenerateCode,
+  exportGeneration,
+  downloadFilesAsZip,
+  createGenerationStream,
+} from '../api/codeGeneration'
+import type { FileOutput, GenerationVersion, GenerateCodeRequest, StreamEvent } from '../api/codeGeneration'
 import PageTransition from '../components/ui/PageTransition'
 import AILoadingState from '../components/ui/AILoadingState'
 import { Button } from '../components/ui/button'
@@ -23,6 +30,13 @@ export default function CodeGenerationPage() {
   const [activeTab, setActiveTab] = useState('optimize')
   const [searchParams] = useSearchParams()
   const selectedFrameId = searchParams.get('frame_id')
+
+  // Streaming state
+  const [streamingLogs, setStreamingLogs] = useState<string[]>([])
+  const [streamingProgress, setStreamingProgress] = useState<{ step: number; message: string; percentage: number } | null>(null)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const logEndRef = useRef<HTMLDivElement>(null)
 
   const currentVersion = versions.find((v) => v.id === currentVersionId)
   const currentVersionFrameIds = currentVersion?.frame_ids || []
@@ -51,29 +65,68 @@ export default function CodeGenerationPage() {
     }
   }, [projectId, loadVersions])
 
+  // Auto-scroll streaming logs
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [streamingLogs])
+
   const handleGenerate = useCallback(async () => {
     if (!projectId) return
     setIsGenerating(true)
     setError(null)
+    setIsStreaming(true)
+    setStreamingLogs([])
+    setStreamingProgress({ step: 1, message: 'Starting generation...', percentage: 0 })
+
     try {
-      const payload: GenerateCodeRequest = {
-        project_id: projectId,
-        frame_ids: selectedFrameId ? [selectedFrameId] : [],
-        framework: 'react',
-        typescript: true,
-        tailwind: true,
-        optimization_level: 'standard',
-      }
-      const result = await generateCode(payload)
-      setFiles(result.files || [])
-      setCurrentVersionId(result.generation_id)
-      await loadVersions()
+      // Start streaming
+      const controller = createGenerationStream(
+        {
+          project_id: projectId,
+          frame_ids: selectedFrameId ? [selectedFrameId] : [],
+          framework: 'react',
+          typescript: true,
+          tailwind: true,
+          optimization_level: 'standard',
+        },
+        (event: StreamEvent) => {
+          if (event.type === 'log' && typeof event.data === 'string') {
+            setStreamingLogs((prev) => [...prev, event.data as string])
+          }
+          if (event.type === 'progress') {
+            setStreamingProgress(event.data)
+          }
+          if (event.type === 'file_generated' && event.data) {
+            setFiles((prev) => [...prev, event.data as FileOutput])
+          }
+          if (event.type === 'error') {
+            setError(event.data?.message || 'Generation failed')
+            setIsStreaming(false)
+            setIsGenerating(false)
+          }
+          if (event.type === 'done' || event.done) {
+            setIsStreaming(false)
+            loadVersions().finally(() => setIsGenerating(false))
+          }
+        },
+      )
+      abortControllerRef.current = controller
     } catch (e: any) {
       setError(e?.message || 'Failed to generate code')
-    } finally {
+      setIsStreaming(false)
       setIsGenerating(false)
     }
   }, [projectId, selectedFrameId, loadVersions])
+
+  const cancelStreaming = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+    setIsStreaming(false)
+    setIsGenerating(false)
+    setStreamingProgress(null)
+  }, [])
 
   const handleRegenerate = useCallback(async () => {
     if (!projectId || !currentVersionId) return
@@ -117,6 +170,10 @@ export default function CodeGenerationPage() {
 
   const handleExport = useCallback(async (format: 'zip' | 'tar') => {
     if (!projectId || !currentVersionId) return
+    if (format === 'zip') {
+      downloadFilesAsZip(currentVersionId)
+      return
+    }
     setIsExporting(true)
     setError(null)
     try {
@@ -154,13 +211,14 @@ export default function CodeGenerationPage() {
   return (
     <PageTransition>
       <div className="flex flex-col h-[calc(100vh-4rem)]">
+        {/* Top bar */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-gray-950/80">
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => navigate('/dashboard')}
               className="text-xs text-muted-foreground hover:text-white transition-colors"
             >
-              &larr; Dashboard
+{'\u2190'} Dashboard
             </button>
             <h1 className="text-sm font-semibold">Code Generation</h1>
             {(selectedFrameId || currentVersionFrameIds.length > 0) && (
@@ -169,28 +227,55 @@ export default function CodeGenerationPage() {
               </span>
             )}
             {files.length > 0 && (
-              <span className="text-[10px] text-muted-foreground">
-                {files.length} files
+              <span className="text-[10px] text-muted-foreground">{files.length} files</span>
+            )}
+            {streamingProgress && (
+              <span className="text-[10px] text-indigo-400">
+                {streamingProgress.percentage}% - {streamingProgress.message}
               </span>
             )}
           </div>
-          <Button onClick={handleGenerate} disabled={isGenerating} size="sm" variant="gradient">
-            {isGenerating ? 'Generating...' : 'Generate Code'}
-          </Button>
+          <div className="flex items-center gap-2">
+            {isStreaming && (
+              <Button onClick={cancelStreaming} size="sm" variant="outline">
+                Cancel
+              </Button>
+            )}
+            <Button onClick={handleGenerate} disabled={isGenerating} size="sm" variant="gradient">
+              {isGenerating ? (isStreaming ? 'Generating...' : 'Generating...') : 'Generate Code'}
+            </Button>
+          </div>
         </div>
 
+        {/* Error banner */}
         {error && (
           <div className="px-4 py-2 bg-red-500/10 border-b border-red-500/20">
             <p className="text-xs text-red-300">{error}</p>
           </div>
         )}
 
-        {!selectedFrameId && (
+        {/* Streaming logs */}
+        {isStreaming && streamingLogs.length > 0 && (
+          <div className="px-4 py-2 bg-indigo-950/30 border-b border-indigo-500/20 max-h-32 overflow-y-auto">
+            <div className="text-[10px] font-mono text-indigo-300 space-y-0.5">
+              {streamingLogs.map((log, i) => (
+                <div key={i} className="truncate">
+                  <span className="text-indigo-500">{'>'}</span> {log}
+                </div>
+              ))}
+              <div ref={logEndRef} />
+            </div>
+          </div>
+        )}
+
+        {/* No frame selected warning */}
+        {!selectedFrameId && !isStreaming && (
           <div className="px-4 py-3 bg-yellow-500/10 border-b border-yellow-500/20 text-xs text-yellow-200">
             No frame selected. Code generation will use all available frames unless you choose a frame from the Figma project detail page first.
           </div>
         )}
 
+        {/* Main content area */}
         <div className="flex flex-1 overflow-hidden">
           <CodeGenerationToolbar
             versions={versions}
@@ -205,7 +290,7 @@ export default function CodeGenerationPage() {
             isExporting={isExporting}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            disabled={versions.length === 0}
+            disabled={versions.length === 0 || isStreaming}
           />
           <div className="flex-1 flex flex-col">
             {files.length > 0 ? (
@@ -235,3 +320,4 @@ export default function CodeGenerationPage() {
     </PageTransition>
   )
 }
+
