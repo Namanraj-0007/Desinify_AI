@@ -1,15 +1,18 @@
-from fastapi import FastAPI
-
+import sys
 from pathlib import Path
 
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Load .env BEFORE importing settings so env_file-based settings are populated reliably.
 # NOTE: this project keeps the actual env at backend/.env
 from dotenv import load_dotenv
-from pathlib import Path
 
-DOTENV_PATH = (Path(__file__).resolve().parents[1] / '.env').resolve()
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
+
+DOTENV_PATH = (BACKEND_ROOT / '.env').resolve()
 load_dotenv(dotenv_path=str(DOTENV_PATH), override=False)
 
 from app.config.settings import settings
@@ -23,6 +26,7 @@ from app.routers.code_generation import router as code_generation_router
 
 
 from app.services.mongo_health import ping_mongo
+from app.services.mongo import set_mongo_fallback_enabled
 
 
 
@@ -62,9 +66,8 @@ def create_app() -> FastAPI:
         # (The Settings class uses env_file='.env' relative to its import root.)
         print(f"[startup] Expected settings.env_file: .env (resolved relative to project root)")
 
-        # Fail-fast: validate required config.
-        settings.required_non_empty('jwt_secret')
-        settings.required_non_empty('mongodb_uri')
+        # Validate the config we need for runtime. Missing values are allowed in local-dev
+        # mode because the app can fall back to safe defaults and in-memory storage.
         settings.required_non_empty('database_name')
         settings.required_non_empty('jwt_algorithm')
         settings.required_non_empty('cors_origins')
@@ -121,7 +124,8 @@ def create_app() -> FastAPI:
         if mongo_err == "ok":
             print(f"[startup] MongoDB connected OK (db={settings.database_name})")
         else:
-            raise RuntimeError(f"Invalid configuration or connectivity: MongoDB ping failed: {mongo_err}")
+            set_mongo_fallback_enabled(True)
+            print(f"[startup] MongoDB unavailable, continuing in local fallback mode: {mongo_err}")
 
 
 

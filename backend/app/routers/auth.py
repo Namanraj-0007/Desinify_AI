@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 
 from app.schemas.auth import LoginRequest, SignupRequest, TokenResponse
 from app.services.auth_service import login_user, signup_user
-from app.services.mongo_health import ping_mongo
 
 
 router = APIRouter(prefix='/auth', tags=['auth'])
@@ -10,11 +9,6 @@ router = APIRouter(prefix='/auth', tags=['auth'])
 
 @router.post('/signup', response_model=TokenResponse)
 async def signup(payload: SignupRequest):
-    # Prevent hanging requests when Mongo is unreachable
-    mongo_err = await ping_mongo(timeout_s=2.5)
-    if mongo_err != "ok":
-        raise HTTPException(status_code=503, detail=f"Mongo unavailable: {mongo_err}")
-
     try:
         token = await signup_user(payload.name, payload.email, payload.password)
         return TokenResponse(access_token=token)

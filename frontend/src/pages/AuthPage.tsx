@@ -36,7 +36,7 @@ export default function AuthPage() {
       }
       navigate('/dashboard')
     } catch (err: any) {
-      setError(err?.response?.data?.detail ?? (mode === 'login' ? 'Login failed' : 'Signup failed'))
+      setError(err?.response?.data?.detail ?? err?.message ?? (mode === 'login' ? 'Login failed' : 'Signup failed'))
     } finally {
       setSubmitting(false)
     }

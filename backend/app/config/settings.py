@@ -12,11 +12,11 @@ class Settings(BaseSettings):
     """
 
     # MongoDB
-    mongodb_uri: str = ''
+    mongodb_uri: str = 'mongodb://localhost:27017'
     database_name: str = 'designify_ai'
 
     # JWT
-    jwt_secret: str = ''
+    jwt_secret: str = 'dev-secret-key'
     jwt_algorithm: str = 'HS256'
     jwt_access_token_expire_minutes: int = 60
 

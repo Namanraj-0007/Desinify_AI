@@ -146,6 +146,7 @@ Frontend
 ```bash
 cd frontend
 npm install
+copy .env.example .env
 npm run dev
 ```
 
@@ -153,15 +154,15 @@ Backend
 
 ```bash
 cd backend
-
 python -m venv .venv
-
 .venv\Scripts\activate
-
 pip install -r requirements.txt
-
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8000
 ```
+
+The app should now be available at:
+- Frontend: http://localhost:5073
+- Backend: http://localhost:8000
 
 ---
 
