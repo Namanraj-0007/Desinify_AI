@@ -76,10 +76,35 @@ export default function CodeGenerationPage() {
     setError(null)
     setIsStreaming(true)
     setStreamingLogs([])
+    setFiles([])
     setStreamingProgress({ step: 1, message: 'Starting generation...', percentage: 0 })
 
     try {
-      // Start streaming
+      // First attempt: Try the non-streaming API which is more reliable
+      try {
+        const result = await generateCode({
+          project_id: projectId,
+          frame_ids: selectedFrameId ? [selectedFrameId] : [],
+          framework: 'react',
+          typescript: true,
+          tailwind: true,
+          optimization_level: 'standard',
+        })
+        if (result && result.files && result.files.length > 0) {
+          setFiles(result.files)
+          setCurrentVersionId(result.generation_id)
+          setIsStreaming(false)
+          setIsGenerating(false)
+          setStreamingLogs((prev) => [...prev, `✅ Generated ${result.files.length} files successfully`])
+          setStreamingProgress({ step: 5, message: `Generated ${result.files.length} files`, percentage: 100 })
+          await loadVersions()
+          return
+        }
+      } catch (nonStreamErr) {
+        setStreamingLogs((prev) => [...prev, `ℹ️ Non-streaming API unavailable, trying streaming...`])
+      }
+
+      // Fallback: Start streaming
       const controller = createGenerationStream(
         {
           project_id: projectId,
@@ -98,6 +123,19 @@ export default function CodeGenerationPage() {
           }
           if (event.type === 'file_generated' && event.data) {
             setFiles((prev) => [...prev, event.data as FileOutput])
+          }
+          if (event.type === 'complete' && event.data) {
+            // Backend sends complete event with full files array
+            const data = event.data as any
+            if (data.files && Array.isArray(data.files) && data.files.length > 0) {
+              setFiles(data.files)
+            }
+            if (data.folder_structure) {
+              setStreamingLogs((prev) => [
+                ...prev,
+                `📁 Folder structure: ${data.folder_structure.length} paths`,
+              ])
+            }
           }
           if (event.type === 'error') {
             setError(event.data?.message || 'Generation failed')
@@ -216,9 +254,12 @@ export default function CodeGenerationPage() {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-xs text-muted-foreground hover:text-white transition-colors"
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-white transition-colors"
             >
-{'\u2190'} Dashboard
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Dashboard
             </button>
             <h1 className="text-sm font-semibold">Code Generation</h1>
             {(selectedFrameId || currentVersionFrameIds.length > 0) && (

@@ -1,4 +1,4 @@
-import React from 'react'
+                                                                                                                                                                                                                                                                        import React from 'react'
 import { ExportButton } from './ExportButton'
 import { OptimizationPanel } from './OptimizationPanel'
 import { VersionHistory } from './VersionHistory'
@@ -41,9 +41,9 @@ export const CodeGenerationToolbar: React.FC<Props> = ({
   ]
 
   return (
-    <div className="border-r border-white/10 bg-gray-950/50 w-72 flex flex-col overflow-hidden">
-      <div className="p-3 border-b border-white/10">
-        <div className="flex items-center justify-between mb-3">
+    <div className="hidden lg:flex border-r border-white/10 bg-gray-950/50 w-72 flex-col overflow-hidden">
+      <div className="p-3 border-b border-white/10 space-y-3">
+        <div className="flex items-center justify-between">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Code Generation
           </h2>
@@ -60,9 +60,10 @@ export const CodeGenerationToolbar: React.FC<Props> = ({
           {isGenerating ? 'Generating...' : 'Regenerate Code'}
         </button>
 
-        <div className="mt-3 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <ExportButton onExport={onExport} isExporting={isExporting} disabled={disabled || isGenerating} />
         </div>
+      </div>
 
       <div className="flex border-b border-white/10">
         {tabs.map((tab) => (
@@ -97,7 +98,6 @@ export const CodeGenerationToolbar: React.FC<Props> = ({
             onRestoreVersion={onRestoreVersion}
           />
         )}
-        </div>
       </div>
     </div>
   )

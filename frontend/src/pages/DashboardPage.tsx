@@ -118,7 +118,7 @@ export default function DashboardPage() {
     setError(null)
     try {
       await API.delete(`/projects/${id}`)
-      await refresh()
+      setProjects((prev) => prev.filter((p) => p.id !== id))
     } catch (e: any) {
       setError(e?.message ?? 'Failed to delete project')
     }

@@ -116,11 +116,11 @@ export const VersionHistory: React.FC<Props> = ({
                   {v.frame_ids && v.frame_ids.length > 0 && (
                     <p>Frames: {v.frame_ids.join(', ')}</p>
                   )}
-                  {v.stats?.component_breakdown && (
+                  {v.stats?.component_breakdown && typeof v.stats.component_breakdown === 'object' && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {Object.entries(v.stats.component_breakdown as Record<string, number>).map(([type, count]) => (
                         <span key={type} className="px-1 py-0.5 rounded bg-white/5">
-                          {type}: {count}
+                          {String(type)}: {Number(count)}
                         </span>
                       ))}
                     </div>
