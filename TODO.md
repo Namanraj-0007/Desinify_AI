@@ -1,49 +1,37 @@
-# Implementation Plan ✅
+# Live Preview Fix - Completed
 
-## Phase 1: Fix Device Preview (CodePreview.tsx) ✅
-- [x] Added `useCallback` import
-- [x] Fixed framer-motion CDN URL (UMD instead of ESM)
-- [x] Fixed device dimensions (removed 'laptop', proper Mobile/Tablet/Desktop sizes)
-- [x] Removed 'laptop' from inline JSX rendering
-- [x] Fixed import to remove unused `useCallback`
-- [x] Note: Full esbuild-wasm rewrite deferred due to complexity - Babel+UMD approach retained with fixes
+## Changes Made to `CodePreview.tsx`
 
-## Phase 2: Fix Download Code Flow ✅
-- [x] Updated ExportButton with prominent "Download Code" primary button
-- [x] Added `onDownloadZip` prop for direct download
-- [x] Added `currentVersionId` prop for disabled state
-- [x] Passed `onDownloadZip` through CodeGenerationToolbar → CodeGenerationPage
-- [x] `downloadFilesAsZip` API function already exists and works
+### 1. Added `buildStubsForModuleImports(source)` function
+- Parses import statements from each source file
+- Generates stub variable declarations for:
+  - **React hooks**: `useState`, `useEffect`, `useRef`, `useMemo`, `useCallback`, `useContext` → mapped to `React.X`
+  - **Router**: `Link`, `useNavigate`, `useParams`, `useSearchParams`, `useLocation` → functional stubs
+  - **Framer Motion**: `AnimatePresence`, `motion` → pass-through components
+  - **UI components** (`/ui/` path): → empty functional div renderers
+  - **API services** (`/api/` path): → mock HTTP methods returning `Promise.resolve`
+  - **Context** (`/context/` path): → `React.createContext(null)`
+  - **Utils/Lib/Hooks/Types**: → null-returning functions
+  - **Layout components**: → wrapper div renderers
+  - **Routes**: → pass-through children renderers
 
-## Phase 3: Backend ZIP Service Enhancement ✅
-- [x] Enhanced zip_service.py with _ensure_essential_files() function
-- [x] Added complete project templates (package.json, vite.config.ts, tsconfig.json, tailwind.config.js, etc.)
-- [x] Auto-injects missing essential config files when creating ZIP archives
-- [x] `ensure_runnable=True` ensures projects work with `npm install && npm run dev`
-- [x] Content-Disposition headers already set in code_generation.py router
+### 2. Added `buildAggregatedStubs(allSources)` function
+- Collects stubs across all files (deduplicated)
+- Called once before processing individual files
 
-## Phase 4: Error Handling & Production Readiness ✅
-- [x] ErrorBoundary component exists with recovery button
-- [x] Preview has inline error overlay for compilation failures
-- [x] Removed unused `useCallback` import from CodePreview.tsx  
-- [x] Removed unused `GenerateCodeRequest` import from CodeGenerationPage.tsx  
-- [x] Fixed all TypeScript errors (verified with npx tsc --noEmit)
-- [x] All imports verified and cleaned up
-- [x] API calls have proper error handling with user-friendly messages
-- [x] Backend error logging throughout all services
-- [x] Frontend error boundaries extend to iframe preview with meaningful error display
+### 3. Fixed error display (the `JSON.stringify` bug)
+- **Before**: `"<div ...>"+JSON.stringify(e.message||e)+"</div>"` — evaluated at **host build time** causing `e is not defined`
+- **After**: `"<div ...>"+(e&&e.message?e.message:String(e))+"</div>"` — properly evaluated at iframe **runtime**
+- Errors are now rendered as styled HTML inside the iframe with proper message extraction
 
-## Validation Checklist
-- [x] Downloaded ZIP contains complete project (essential files auto-injected)
-- [x] Generated project runs with `npm install && npm run dev`
-- [x] Mobile preview works (375x812)
-- [x] Tablet preview works (768x1024)
-- [x] Desktop preview works (1280x800)
-- [x] No console errors (error boundaries catch all)
-- [x] No backend errors (comprehensive error handling)
-- [x] No broken imports (verified all dependencies) 
+### 4. Fixed module error visibility
+- **Before**: File-level errors were silently `console.error`'d
+- **After**: Errors are pushed to `window.__previewErrors[]` array, and displayed as collapsible `<details>` panel beneath the main error message
 
----
+### 5. Preserved AI-generated code without transformations
+- No longer stripping `import` statements — instead generating stubs for all imported names
+- Only type-only imports (`import type ...`) are removed (they have no runtime value)
 
-All 4 phases are complete. The application is now production-ready.
+### 6. Added `transform-modules-commonjs` Babel plugin
+- Added to `plugins` array for better module transpilation
 
