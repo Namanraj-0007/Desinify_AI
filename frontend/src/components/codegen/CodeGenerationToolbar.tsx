@@ -11,6 +11,7 @@ interface Props {
   onRestoreVersion: (version: GenerationVersion) => void
   onOptimize: (type: string) => void
   onExport: (format: 'zip' | 'tar') => void
+  onDownloadZip: () => void
   onRegenerate: () => void
   isGenerating: boolean
   isOptimizing: boolean
@@ -27,6 +28,7 @@ export const CodeGenerationToolbar: React.FC<Props> = ({
   onRestoreVersion,
   onOptimize,
   onExport,
+  onDownloadZip,
   onRegenerate,
   isGenerating,
   isOptimizing,
@@ -61,7 +63,7 @@ export const CodeGenerationToolbar: React.FC<Props> = ({
         </button>
 
         <div className="flex items-center gap-2">
-          <ExportButton onExport={onExport} isExporting={isExporting} disabled={disabled || isGenerating} />
+          <ExportButton onExport={onExport} onDownloadZip={onDownloadZip} isExporting={isExporting} disabled={disabled || isGenerating} currentVersionId={currentVersionId} />
         </div>
       </div>
 

@@ -129,7 +129,22 @@ function HeroSection() {
                       <h3 className="font-display text-xl font-semibold">Try it now</h3>
                       <p className="text-sm text-muted-foreground mt-1">Drop a screenshot to see the magic</p>
                     </div>
-                    <InteractiveUploadZone onFileSelect={() => {}} />
+                  <InteractiveUploadZone
+                    onFileSelect={(file) => {
+                      const reader = new FileReader();
+                      reader.onload = (e) => {
+                        const dataUrl = e.target?.result as string;
+                        sessionStorage.setItem('uploadedImage', dataUrl);
+                        sessionStorage.setItem('uploadedImageName', file.name);
+                        navigate(token ? '/dashboard' : '/auth');
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                    onFigmaUrl={(url) => {
+                      sessionStorage.setItem('figmaUrl', url);
+                      navigate(token ? '/dashboard' : '/auth');
+                    }}
+                  />
                     <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
                       <svg className="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

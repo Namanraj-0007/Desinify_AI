@@ -206,6 +206,11 @@ export default function CodeGenerationPage() {
     }
   }, [projectId, currentVersionId, loadVersions])
 
+  const handleDownloadZip = useCallback(() => {
+    if (!currentVersionId) return
+    downloadFilesAsZip(currentVersionId)
+  }, [currentVersionId])
+
   const handleExport = useCallback(async (format: 'zip' | 'tar') => {
     if (!projectId || !currentVersionId) return
     if (format === 'zip') {
@@ -325,6 +330,7 @@ export default function CodeGenerationPage() {
             onRestoreVersion={handleRestoreVersion}
             onOptimize={handleOptimize}
             onExport={handleExport}
+            onDownloadZip={() => currentVersionId && downloadFilesAsZip(currentVersionId)}
             onRegenerate={handleRegenerate}
             isGenerating={isGenerating}
             isOptimizing={isOptimizing}
