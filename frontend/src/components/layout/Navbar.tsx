@@ -6,9 +6,10 @@ import { Button } from '../ui/button'
 import { cn } from '../../lib/utils'
 
 const navItems = [
-  { label: 'Features', href: '#features' },
-  { label: 'How it works', href: '#how-it-works' },
-  { label: 'Preview', href: '#preview' },
+  { label: 'Features', href: '#features', external: true },
+  { label: 'How it works', href: '#how-it-works', external: true },
+  { label: 'Preview', href: '#preview', external: true },
+  { label: 'About', href: '/about', external: false },
 ]
 
 export default function Navbar() {
@@ -51,15 +52,35 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-white/[0.05]"
-              >
-                {item.label}
-              </a>
-            ))}
+            {navItems.map((item) =>
+              item.external ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'px-4 py-2 text-sm transition-colors rounded-lg',
+                    location.pathname === '/'
+                      ? 'text-foreground bg-white/[0.08]'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.05]'
+                  )}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={cn(
+                    'px-4 py-2 text-sm transition-colors rounded-lg',
+                    location.pathname === item.href
+                      ? 'text-foreground bg-white/[0.08]'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.05]'
+                  )}
+                >
+                  {item.label}
+                </Link>
+              )
+            )}
           </nav>
 
           {/* Auth buttons */}
@@ -122,16 +143,27 @@ export default function Navbar() {
             className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-xl"
           >
             <div className="px-4 py-4 space-y-2">
-              {navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/[0.05] transition-colors"
-                >
-                  {item.label}
-                </a>
-              ))}
+              {navItems.map((item) =>
+                item.external ? (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/[0.05] transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/[0.05] transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
               <div className="pt-2 border-t border-border/50">
                 {!token && (
                   <Button variant="ghost" className="w-full" onClick={() => { navigate('/auth'); setMobileOpen(false) }}>

@@ -1,22 +1,38 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+0
 import { Link } from 'react-router-dom'
 
 const footerLinks = {
-  Product: [
-    { label: 'Features', href: '#features' },
-    { label: 'Pricing', href: '#' },
-    { label: 'Changelog', href: '#' },
+  Resources: [
     { label: 'Documentation', href: '#' },
+    { label: 'API Reference', href: '#' },
+    { label: 'Changelog', href: '#' },
+    { label: 'Status', href: '#' },
   ],
   Company: [
-    { label: 'About', href: '#' },
-    { label: 'Blog', href: '#' },
-    { label: 'Careers', href: '#' },
-    { label: 'Contact', href: '#' },
+    { label: 'About', href: '/about' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Careers', href: '/careers' },
+    { label: 'Contact', href: '/contact' },
   ],
-  Legal: [
-    { label: 'Privacy', href: '#' },
-    { label: 'Terms', href: '#' },
-    { label: 'License', href: '#' },
+  Connect: [
+    { label: 'Twitter', href: 'https://twitter.com' },
+    { label: 'Discord', href: 'https://discord.com/users/763966768615915530' },
+    { label: 'GitHub', href: 'https://github.com/Namanraj-0007' },
+    { label: 'Discord', href: '#' },
+    { label: 'Email', href: 'mailto:hello@designifyai.dev' },
   ],
 }
 

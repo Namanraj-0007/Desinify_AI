@@ -6,6 +6,10 @@ import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import FigmaProjectDetailPage from './pages/FigmaProjectDetailPage'
 import CodeGenerationPage from './pages/CodeGenerationPage'
+import AboutPage from './pages/AboutPage'
+import BlogPage from './pages/BlogPage'
+import ContactPage from './pages/ContactPage'
+import CareersPage from './pages/CareersPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { AuthProvider } from './context/AuthContext'
 
@@ -16,6 +20,10 @@ export default function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/careers" element={<CareersPage />} />
             <Route path="/auth" element={<AuthPage />} />
 
             <Route
