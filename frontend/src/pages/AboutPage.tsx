@@ -419,6 +419,9 @@ function DeveloperSection() {
           <p className="mt-4 text-lg text-muted-foreground max-w-xl mx-auto">
             A full-stack developer and AI enthusiast dedicated to creating tools that empower creators.
           </p>
+          <p className="mt-2 text-sm text-indigo-300/70">
+            Designed by <span className="text-indigo-300">Namandip raj</span> with <span className="text-red-400">&#10084;</span>
+          </p>
         </motion.div>
 
         <motion.div

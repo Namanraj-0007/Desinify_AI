@@ -154,6 +154,8 @@ export default function Footer() {
               >
                 Namandip Raj
               </a>
+              <span className="mx-1.5 text-muted-foreground/30">·</span>
+              Designed by <span className="text-indigo-300">Namandip raj</span> with <span className="text-red-400">&#10084;</span>
             </span>
           </p>
           <div className="flex items-center gap-4">

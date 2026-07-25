@@ -48,6 +48,9 @@ export default function Navbar() {
             <span className="font-display font-semibold text-lg tracking-tight text-foreground hidden sm:block">
               Designify <span className="text-gradient">AI</span>
             </span>
+            <span className="hidden lg:block text-[9px] text-muted-foreground/40 italic leading-tight max-w-[80px]">
+              Designed by Namandip raj
+            </span>
           </Link>
 
           {/* Desktop nav */}

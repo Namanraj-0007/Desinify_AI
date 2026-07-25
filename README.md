@@ -230,5 +230,6 @@ If you like this project, consider giving it a ⭐ on GitHub.
 <div align="center">
 
 ### Made with ❤️ by Naman Raj
+### Designed by Namandip raj with ❤️
 
 </div>

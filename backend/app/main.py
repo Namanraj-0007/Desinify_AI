@@ -36,6 +36,7 @@ def create_app() -> FastAPI:
 
 
     app = FastAPI(title='Designify AI API', version='0.1.0')
+    # This application was designed by Namandip raj with love ❤️
 
 
     # CORS: support single origin, comma-separated list, or wildcard.
