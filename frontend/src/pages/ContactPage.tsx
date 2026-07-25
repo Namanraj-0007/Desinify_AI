@@ -44,7 +44,7 @@ const contactMethods = [
 const EMAILJS_SERVICE_ID = 'service_at3kuip'
 const EMAILJS_ADMIN_TEMPLATE_ID = 'template_y5am5de'
 const EMAILJS_USER_TEMPLATE_ID = 'template_kj7s16m'
-const EMAILJS_PUBLIC_KEY = (import.meta as any).env?.VITE_EMAILJS_PUBLIC_KEY || ''
+const EMAILJS_PUBLIC_KEY = 'Tl-ipH3T8XweKxVLA'
 
 export default function ContactPage() {
   const formRef = useRef<HTMLFormElement>(null)
@@ -55,22 +55,51 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formRef.current) return
+    const form = formRef.current
+    const formData = new FormData(form)
+    const email = formData.get('email') as string
+    const name = formData.get('name') as string
+    const subject = formData.get('subject') as string
+    const message = formData.get('message') as string
+    if (!email || !name || !subject || !message) {
+      setSendError('Please fill in all fields.')
+      return
+    }
     setSending(true)
     setSendError(null)
     try {
-      const form = formRef.current
-      const formData = new FormData(form)
-      const name = formData.get('name') as string
-      const email = formData.get('email') as string
-      const subject = formData.get('subject') as string
-      const message = formData.get('message') as string
-      const templateParams = { from_name: name, from_email: email, subject, message, to_email: 'namandraj4777@gmail.com' }
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_ADMIN_TEMPLATE_ID, { ...templateParams, to_email: 'namandraj4777@gmail.com' }, EMAILJS_PUBLIC_KEY)
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_USER_TEMPLATE_ID, { ...templateParams, to_email: email }, EMAILJS_PUBLIC_KEY)
+      // Admin notification - sends to your email (template_y5am5de)
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_ADMIN_TEMPLATE_ID,
+        {
+          from_name: name,
+          from_email: email,
+          subject,
+          message,
+          to_email: 'namandraj4777@gmail.com',
+          reply_to: email
+        },
+        EMAILJS_PUBLIC_KEY
+      )
+      // User auto-reply - sends to user (template_kj7s16m uses {{email}} and {{reply_to}})
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_USER_TEMPLATE_ID,
+        {
+          email: email,
+          reply_to: email,
+          name: name,
+          message: message,
+          subject: subject
+        },
+        EMAILJS_PUBLIC_KEY
+      )
       setSubmitted(true)
       form.reset()
       setTimeout(() => setSubmitted(false), 5000)
     } catch (err: any) {
+      console.error('EmailJS error:', err)
       setSendError(err?.text || err?.message || 'Failed to send message. Please try again.')
     } finally {
       setSending(false)

@@ -54,18 +54,25 @@ export default function Navbar() {
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) =>
               item.external ? (
-                <a
+                <button
                   key={item.href}
-                  href={item.href}
+                  onClick={() => {
+                    if (location.pathname === '/') {
+                      const el = document.querySelector(item.href)
+                      el?.scrollIntoView({ behavior: 'smooth' })
+                    } else {
+                      navigate('/' + item.href)
+                    }
+                  }}
                   className={cn(
-                    'px-4 py-2 text-sm transition-colors rounded-lg',
+                    'px-4 py-2 text-sm transition-colors rounded-lg cursor-pointer',
                     location.pathname === '/'
                       ? 'text-foreground bg-white/[0.08]'
                       : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.05]'
                   )}
                 >
                   {item.label}
-                </a>
+                </button>
               ) : (
                 <Link
                   key={item.href}
@@ -145,14 +152,21 @@ export default function Navbar() {
             <div className="px-4 py-4 space-y-2">
               {navItems.map((item) =>
                 item.external ? (
-                  <a
+                  <button
                     key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/[0.05] transition-colors"
+                    onClick={() => {
+                      setMobileOpen(false)
+                      if (location.pathname === '/') {
+                        const el = document.querySelector(item.href)
+                        el?.scrollIntoView({ behavior: 'smooth' })
+                      } else {
+                        navigate('/' + item.href)
+                      }
+                    }}
+                    className="block w-full text-left px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/[0.05] transition-colors"
                   >
                     {item.label}
-                  </a>
+                  </button>
                 ) : (
                   <Link
                     key={item.href}
