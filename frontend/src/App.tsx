@@ -10,6 +10,10 @@ import AboutPage from './pages/AboutPage'
 import BlogPage from './pages/BlogPage'
 import ContactPage from './pages/ContactPage'
 import CareersPage from './pages/CareersPage'
+import DocumentationPage from './pages/DocumentationPage'
+import ApiReferencePage from './pages/ApiReferencePage'
+import ChangelogPage from './pages/ChangelogPage'
+import StatusPage from './pages/StatusPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { AuthProvider } from './context/AuthContext'
 
@@ -24,6 +28,10 @@ export default function App() {
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/careers" element={<CareersPage />} />
+            <Route path="/docs" element={<DocumentationPage />} />
+            <Route path="/api" element={<ApiReferencePage />} />
+            <Route path="/changelog" element={<ChangelogPage />} />
+            <Route path="/status" element={<StatusPage />} />
             <Route path="/auth" element={<AuthPage />} />
 
             <Route
