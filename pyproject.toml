@@ -10,5 +10,5 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.vercel]
-entrypoint = "app.main:app"
+entrypoint = "backend.app.main:app"
 
