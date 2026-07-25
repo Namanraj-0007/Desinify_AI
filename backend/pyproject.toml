@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "designify-ai-backend"
+version = "0.1.0"
+description = "Designify AI Backend API"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.vercel]
+entrypoint = "backend.app.main:app"
+
