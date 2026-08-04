@@ -151,12 +151,23 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         return response
 
-    @app.get(f"{settings.api_prefix}/health")
+    prefix = settings.api_prefix.rstrip('/')
 
+    @app.get('/')
+    async def root():
+        return {
+            'status': 'ok',
+            'message': 'Designify AI API is running',
+            'docs': '/docs',
+        }
 
+    @app.get('/health')
     async def health():
         return {'ok': True}
 
+    @app.get(f'{prefix}/health')
+    async def prefixed_health():
+        return {'ok': True}
 
     return app
 
