@@ -112,33 +112,6 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         return response
 
-    prefix = settings.api_prefix.rstrip('/')
-
-    @app.get('/')
-    async def root():
-        return {
-            'status': 'ok',
-            'message': 'Designify AI API is running',
-            'docs': '/docs',
-        }
-
-    @app.get('/health')
-    async def health():
-        return {'ok': True}
-
-    @app.get(f'{prefix}/health')
-    async def prefixed_health():
-        return {'ok': True}
-
-    @app.get('/{full_path:path}')
-    async def catch_all(full_path: str):
-        return {
-            'status': 'ok',
-            'message': 'Designify AI API is running',
-            'path': f'/{full_path}',
-            'docs': '/docs',
-        }
-
     return app
 
 
