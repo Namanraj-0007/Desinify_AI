@@ -30,6 +30,9 @@ where = ["."]
 include = ["backend*"]
 exclude = ["frontend*"]
 
+[tool.uv]
+package = false
+
 [tool.vercel]
 entrypoint = "backend.app.main:app"
 
