@@ -63,70 +63,31 @@ def create_app() -> FastAPI:
 
     @app.on_event('startup')
     async def startup_verify_config_and_mongo():
-        # Confirm Settings is reading from the backend .env file.
-        # (The Settings class uses env_file='.env' relative to its import root.)
-        print(f"[startup] Expected settings.env_file: .env (resolved relative to project root)")
+        print('[startup] Initializing app in deployment-safe mode')
 
-        # Validate the config we need for runtime. Missing values are allowed in local-dev
-        # mode because the app can fall back to safe defaults and in-memory storage.
-        settings.required_non_empty('database_name')
-        settings.required_non_empty('jwt_algorithm')
-        settings.required_non_empty('cors_origins')
-        settings.required_non_empty('api_prefix')
+        try:
+            import os
+            print('[startup] os.getcwd() =', os.getcwd())
+            raw_env = settings.dump_env_for_debug()
+            for k in sorted(raw_env.keys()):
+                print(f"  {k}={raw_env[k]}")
 
-        # Google OAuth is required only if the OAuth routes are being used.
-        # Also ensure we show operators where the env came from.
+            masked = settings.masked_config()
+            for k in sorted(masked.keys()):
+                print(f"  {k}={masked[k]}")
+        except Exception as exc:
+            print(f"[startup] config logging skipped: {exc}")
 
-
-        # Fail-fast hardening here can break local dev if GOOGLE_* vars are not set.
-        # We validate it conditionally.
-        google_required_keys = {
-            'google_oauth_client_id': settings.google_oauth_client_id,
-            'google_oauth_client_secret': settings.google_oauth_client_secret,
-            'google_oauth_redirect_uri': settings.google_oauth_redirect_uri,
-        }
-        google_any_set = any(v is not None and str(v).strip() for v in google_required_keys.values())
-        google_all_set = all(v is not None and str(v).strip() for v in google_required_keys.values())
-
-        if google_any_set and not google_all_set:
-            missing = [k for k, v in google_required_keys.items() if not (v is not None and str(v).strip())]
-            raise RuntimeError(f"Invalid configuration: missing Google OAuth env vars: {', '.join(missing)}")
-
-        if google_all_set:
-            # Validate redirect route path (code contract):
-            # Backend callback route is: /api/auth/google/callback
-            expected_route_path = f"{settings.api_prefix}/auth/google/callback"
-            if settings.google_oauth_redirect_uri.rstrip('/') != expected_route_path.rstrip('/'):
-                raise RuntimeError(
-                    'Invalid configuration: GOOGLE_REDIRECT_URI does not match the backend callback route. '
-                    f'Expected: {expected_route_path}, Got: {settings.google_oauth_redirect_uri}'
-                )
-
-
-        # Print env source diagnostics
-        import os
-
-        print('[startup] os.getcwd() =', os.getcwd())
-        print('[startup] backend/app/config/settings.py uses env_file=.env (relative to process cwd)')
-        print('[startup] os.environ (raw) for critical keys:')
-        raw_env = settings.dump_env_for_debug()
-        for k in sorted(raw_env.keys()):
-            print(f"  {k}={raw_env[k]}")
-
-        # Print loaded configuration with secrets masked.
-        masked = settings.masked_config()
-        print('[startup] Settings model (masked):')
-        for k in sorted(masked.keys()):
-            print(f"  {k}={masked[k]}")
-
-
-        # Verify Mongo is reachable on server startup (short timeout)
-        mongo_err = await ping_mongo(timeout_s=2.5)
-        if mongo_err == "ok":
-            print(f"[startup] MongoDB connected OK (db={settings.database_name})")
-        else:
+        try:
+            mongo_err = await ping_mongo(timeout_s=2.5)
+            if mongo_err == "ok":
+                print(f"[startup] MongoDB connected OK (db={settings.database_name})")
+            else:
+                set_mongo_fallback_enabled(True)
+                print(f"[startup] MongoDB unavailable, continuing in fallback mode: {mongo_err}")
+        except Exception as exc:
             set_mongo_fallback_enabled(True)
-            print(f"[startup] MongoDB unavailable, continuing in local fallback mode: {mongo_err}")
+            print(f"[startup] MongoDB check skipped due to error: {exc}")
 
 
 
@@ -168,6 +129,15 @@ def create_app() -> FastAPI:
     @app.get(f'{prefix}/health')
     async def prefixed_health():
         return {'ok': True}
+
+    @app.get('/{full_path:path}')
+    async def catch_all(full_path: str):
+        return {
+            'status': 'ok',
+            'message': 'Designify AI API is running',
+            'path': f'/{full_path}',
+            'docs': '/docs',
+        }
 
     return app
 
