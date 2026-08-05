@@ -50,7 +50,7 @@ Instead of manually recreating UI components block-by-block, developers can impo
 
 <!-- You can replace this with your actual video link/GIF preview -->
 <a href="#">
-  <img src="https://placehold.co/1200x675/1a1a1a/A855F7?text=▶+Click+to+Watch+Designify+AI+Demo" alt="Watch the demo" width="100%">
+  <img src="[https://placehold.co/1200x675/1a1a1a/A855F7?text=](https://youtu.be/mu2l5VrZlyA)▶+Click+to+Watch+Designify+AI+Demo" alt="Watch the demo" width="100%">
 </a>
 
 <sub>👆 Click above or add your recording to <code>docs/media/demo.gif</code></sub>
