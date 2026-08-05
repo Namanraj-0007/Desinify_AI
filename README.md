@@ -1,170 +1,282 @@
-<div align="center"> <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=32&pause=1000&color=A855F7&center=true&vCenter=true&width=600&lines=Designify+AI;Figma+%E2%86%92+Production+Code;Powered+by+Gemini+AI" alt="Typing SVG" />
-🎨 Designify AI
-🚀 AI-Powered Figma to Production Code Generator
 
-Transform Figma designs into clean, reusable and production-ready React components using AI.
+<div align="center">
 
-<p align="center"> <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black&labelColor=20232a"> <img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=20232a"> <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white&labelColor=20232a"> <img src="https://img.shields.io/badge/Google-OAuth-EA4335?style=for-the-badge&logo=google&logoColor=white&labelColor=20232a"> <img src="https://img.shields.io/badge/AI-Gemini-8E44AD?style=for-the-badge&logoColor=white&labelColor=20232a"> <img src="https://img.shields.io/github/license/Namanraj-0007/DesignifyAI?style=for-the-badge&labelColor=20232a"> </p> <p align="center"> <img src="https://img.shields.io/github/stars/Namanraj-0007/DesignifyAI?style=social"> <img src="https://img.shields.io/github/forks/Namanraj-0007/DesignifyAI?style=social"> <img src="https://img.shields.io/github/last-commit/Namanraj-0007/DesignifyAI?style=flat-square&color=A855F7"> </p> <br/> <p align="center"> <a href="https://your-portfolio-url.vercel.app"><img src="https://img.shields.io/badge/🌐_My_Portfolio-Visit_Now-000000?style=for-the-badge&logo=vercel&logoColor=white"></a> <a href="#"><img src="https://img.shields.io/badge/🚀_Live_Demo-Coming_Soon-6C5CE7?style=for-the-badge"></a> </p>
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=32&pause=1000&color=A855F7&center=true&vCenter=true&width=600&lines=Designify+AI;Figma+%E2%86%92+Production+Code;Powered+by+Gemini+AI" alt="Typing SVG" />
 
-<sub>⚠️ Replace <code>your-portfolio-url.vercel.app</code> above with your actual deployed portfolio link.</sub>
+# 🎨 Designify AI
+### 🚀 AI-Powered Figma to Production Code Generator
 
-</div> <br/> <div align="center"> <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=120&section=header" width="100%"> </div>
-📖 Overview
+*Transform Figma designs into clean, reusable, and production-ready React components using state-of-the-art AI.*
 
-Designify AI is an intelligent AI-powered platform that converts Figma UI designs into production-ready React code.
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black&labelColor=20232a">
+  <img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=20232a">
+  <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white&labelColor=20232a">
+  <img src="https://img.shields.io/badge/Google-OAuth-EA4335?style=for-the-badge&logo=google&logoColor=white&labelColor=20232a">
+  <img src="https://img.shields.io/badge/AI-Gemini-8E44AD?style=for-the-badge&logoColor=white&labelColor=20232a">
+  <img src="https://img.shields.io/github/license/Namanraj-0007/DesignifyAI?style=for-the-badge&labelColor=20232a">
+</p>
 
-Instead of manually recreating UI designs, developers can import Figma files and generate optimized, responsive React components with AI assistance — cutting design-to-code time from hours to minutes.
+<p align="center">
+  <img src="https://img.shields.io/github/stars/Namanraj-0007/DesignifyAI?style=social">
+  <img src="https://img.shields.io/github/forks/Namanraj-0007/DesignifyAI?style=social">
+  <img src="https://img.shields.io/github/last-commit/Namanraj-0007/DesignifyAI?style=flat-square&color=A855F7">
+</p>
 
-🎥 Screen Recording
+<p align="center">
+  <a href="https://github.com/Namanraj-0007"><img src="https://img.shields.io/badge/🌐_My_Portfolio-Visit_Now-000000?style=for-the-badge&logo=vercel&logoColor=white"></a>
+  <a href="#"><img src="https://img.shields.io/badge/🚀_Live_Demo-Coming_Soon-6C5CE7?style=for-the-badge"></a>
+</p>
+
+</div>
+
+---
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=120&section=header" width="100%">
+
+## 📖 Overview
+
+**Designify AI** is an intelligent developer-first platform built to bridge the gap between design and development by converting Figma UI designs directly into clean, optimized, production-ready React code. 
+
+Instead of manually recreating UI components block-by-block, developers can import Figma files and leverage **Gemini AI** to parse layouts, detect structures, and generate responsive React code instantly—slashing your design-to-code workflow from hours down to minutes.
+
+---
+
+## 🎥 Screen Recording
+
 <div align="center">
 
 🎬 A full walkthrough of Designify AI in action — from Figma import to generated React code.
 
-<!-- Replace the line below with your actual screen recording. Options: 1) Upload a .mp4/.mov to GitHub via an Issue, copy the resulting link, and embed it in an HTML <video> tag (renders on GitHub). 2) Convert your recording to a .gif and reference it directly like an image. 3) Host on YouTube/Loom and use the thumbnail-as-link trick below. --> <a href="#"> <img src="https://your-cdn-or-repo-link/demo-thumbnail.png" alt="Watch the demo" width="80%"> </a>
+<!-- You can replace this with your actual video link/GIF preview -->
+<a href="#">
+  <img src="https://placehold.co/1200x675/1a1a1a/A855F7?text=▶+Click+to+Watch+Designify+AI+Demo" alt="Watch the demo" width="100%">
+</a>
 
-<sub>👆 Click to watch the full demo (replace with your video link)</sub>
-
-</div> <details> <summary>📌 How to add your own screen recording</summary> <br/>
-Record your screen (e.g. with OBS, ScreenStudio, or Loom).
-Convert to .gif for autoplay-in-README, or keep as .mp4 for a clickable thumbnail.
-Place the file in a docs/media/ folder in your repo.
-Reference it here:
-md
-   ![Demo](docs/media/demo.gif)
-
-or for video via HTML (works on GitHub):
-
-html
-   <video src="docs/media/demo.mp4" controls width="100%"></video>
-</details>
-📸 Screenshots
-<div align="center"> <table> <tr> <td align="center" width="50%"> <img src="https://your-cdn-or-repo-link/screenshot-dashboard.png" width="100%"><br/> <sub><b>🏠 Dashboard</b></sub> </td> <td align="center" width="50%"> <img src="https://your-cdn-or-repo-link/screenshot-editor.png" width="100%"><br/> <sub><b>🧩 Component Editor</b></sub> </td> </tr> <tr> <td align="center" width="50%"> <img src="https://your-cdn-or-repo-link/screenshot-figma-import.png" width="100%"><br/> <sub><b>🎨 Figma Import</b></sub> </td> <td align="center" width="50%"> <img src="https://your-cdn-or-repo-link/screenshot-code-preview.png" width="100%"><br/> <sub><b>⚡ Live Code Preview</b></sub> </td> </tr> </table>
-
-<sub>📁 Drop your screenshots in <code>docs/media/</code> and swap the placeholder links above.</sub>
+<sub>👆 Click above or add your recording to <code>docs/media/demo.gif</code></sub>
 
 </div>
-✨ Features
-<table> <tr> <td>
 
-✅ Secure JWT Authentication ✅ Google OAuth Login ✅ MongoDB Atlas Integration ✅ AI-Powered UI Analysis ✅ Figma API Integration
+---
 
-</td> <td>
+## 📸 Screenshots
 
-✅ Component Detection ✅ Responsive React Code Generation ✅ Live Preview ✅ Project Dashboard ✅ Theme Support & Export
-
-</td> </tr> </table>
-🛠 Tech Stack
 <div align="center">
-Layer	Stack
-🎨 Frontend	React · TypeScript · Vite · Tailwind CSS
-⚙️ Backend	FastAPI · Python · JWT · Google OAuth
-🗄 Database	MongoDB Atlas
-🤖 AI	Gemini API
-🖌 Design Source	Figma API
+  <table width="100%">
+    <tr>
+      <td align="center" width="50%">
+        <img src="https://placehold.co/600x400/121212/61DAFB?text=Dashboard+UI" width="100%" alt="Dashboard"><br/>
+        <sub><b>🏠 Dashboard</b></sub>
+      </td>
+      <td align="center" width="50%">
+        <img src="https://placehold.co/600x400/121212/009688?text=Component+Editor" width="100%" alt="Editor"><br/>
+        <sub><b>🧩 Component Editor</b></sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="50%">
+        <img src="https://placehold.co/600x400/121212/8E44AD?text=Figma+Import" width="100%" alt="Figma Import"><br/>
+        <sub><b>🎨 Figma Import</b></sub>
+      </td>
+      <td align="center" width="50%">
+        <img src="https://placehold.co/600x400/121212/47A248?text=Live+Code+Preview" width="100%" alt="Code Preview"><br/>
+        <sub><b>⚡ Live Code Preview</b></sub>
+      </td>
+    </tr>
+  </table>
+  <sub>📁 Drop your actual screenshots into <code>docs/media/</code> and swap out the placeholder links above.</sub>
 </div>
-🏗 Project Architecture
-text
-                    React + Vite (Frontend)
-                              │
-                              ▼
-                     FastAPI Backend (API Layer)
-                              │
-              ┌───────────────┴───────────────┐
-              ▼                               ▼
-       MongoDB Atlas                     Gemini AI
-     (Users · Projects)             (Design Analysis)
-              │                               │
-              └───────────────┬───────────────┘
-                              ▼
-                        Figma API
-                  (Design Source of Truth)
-📂 Folder Structure
-text
-DesignifyAI
-│
-├── backend
-│   ├── app
-│   ├── routers
-│   ├── services
-│   ├── models
-│   ├── schemas
-│   └── utils
-│
-├── frontend
-│   ├── src
-│   ├── pages
-│   ├── components
-│   ├── hooks
-│   ├── context
-│   └── api
-│
-├── docs
-│   └── media          👈 put screenshots & recordings here
+
+---
+
+## ✨ Features
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🔐 Security & Auth</h3>
+      <ul>
+        <li>Secure JWT Authentication</li>
+        <li>Google OAuth Quick Login</li>
+        <li>Protected API Routes</li>
+      </ul>
+      <h3>🧠 AI & Integrations</h3>
+      <ul>
+        <li>Advanced Gemini AI UI Analysis</li>
+        <li>Direct Figma API Integration</li>
+        <li>Component Hierarchy Detection</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>⚡ Development Suite</h3>
+      <ul>
+        <li>Responsive React Code Generation</li>
+        <li>Real-time Live Preview Window</li>
+        <li>Centralized Project Dashboard</li>
+        <li>Custom Theme & Code Export Options</li>
+        <li>MongoDB Atlas Scalable Storage</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology / Tool |
+| :--- | :--- |
+| **🎨 Frontend** | `React` · `TypeScript` · `Vite` · `Tailwind CSS` |
+| **⚙️ Backend** | `FastAPI` · `Python` · `JWT` · `Google OAuth` |
+| **🗄 Database** | `MongoDB Atlas` |
+| **🤖 AI Engine** | `Google Gemini API` |
+| **🖌 Design Source** | `Figma REST API` |
+
+---
+
+## 🏗 Project Architecture
+
+```text
+                  React + Vite (Frontend)
+                             │
+                             ▼
+                 FastAPI Backend (API Layer)
+                             │
+              ┌──────────────┴──────────────┐
+              ▼                             ▼
+        MongoDB Atlas                   Gemini AI
+      (Users · Projects)           (Design Analysis)
+              │                             │
+              └──────────────┬──────────────┘
+                             ▼
+                         Figma API
+                 (Design Source of Truth)
+
+```
+
+---
+
+## 📂 Folder Structure
+
+```text
+DesignifyAI/
+├── backend/
+│   ├── app/
+│   ├── routers/
+│   ├── services/
+│   ├── models/
+│   ├── schemas/
+│   └── utils/
+├── frontend/
+│   ├── src/
+│   ├── pages/
+│   ├── components/
+│   ├── hooks/
+│   ├── context/
+│   └── api/
+├── docs/
+│   └── media/       👈 Place screenshots & demo gifs here
 └── README.md
-🚀 Installation
 
-Clone the repository
+```
 
-bash
-git clone https://github.com/Namanraj-0007/DesignifyAI.git
+---
 
-Frontend
+## 🚀 Installation & Setup
 
-bash
+### 1. Clone the Repository
+
+```bash
+git clone [https://github.com/Namanraj-0007/DesignifyAI.git](https://github.com/Namanraj-0007/DesignifyAI.git)
+cd DesignifyAI
+
+```
+
+### 2. Frontend Setup
+
+```bash
 cd frontend
 npm install
-copy .env.example .env
+cp .env.example .env   # Configure your variables
 npm run dev
 
-Backend
+```
 
-bash
+### 3. Backend Setup
+
+```bash
 cd backend
 python -m venv .venv
+# On Windows:
 .venv\Scripts\activate
+# On macOS/Linux:
+# source .venv/bin/activate
+
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 
-The app should now be available at:
+```
 
-🖥 Frontend → http://localhost:5073
-⚙️ Backend → http://localhost:8000
-🔑 Environment Variables
+### 🌐 Access Ports
 
-Backend
+* **🖥 Frontend:** `http://localhost:5073` (or Vite default)
+* **⚙️ Backend API Docs:** `http://localhost:8000/docs`
 
-env
-MONGODB_URI=
-JWT_SECRET=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=
+---
 
-Frontend
+## 🔑 Environment Variables
 
-env
+Create a `.env` file in respective directories using the structure below:
+
+### Backend (`backend/.env`)
+
+```env
+MONGODB_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_jwt_secret_key
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
+
+```
+
+### Frontend (`frontend/.env`)
+
+```env
 VITE_API_URL=http://localhost:8000
-VITE_GOOGLE_CLIENT_ID=
-🗺 Roadmap
- Authentication
- MongoDB Atlas
- JWT
- Google OAuth
- Figma Import
- AI Component Detection
- React Code Generation
- Live Preview
- Export Project
- Deployment
-🤝 Contributing
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
 
-Contributions are welcome! Feel free to fork the project, open an issue, or submit a Pull Request.
+```
 
-⭐ Support
+---
 
-If you like this project, consider giving it a ⭐ on GitHub — it helps a lot!
+## 🗺 Roadmap
 
-<div align="center"> <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer" width="100%">
-Made with ❤️ by Naman Raj
-Designed by Namandip Raj with ❤️
-</div>
+* [x] Authentication & Security Setup
+* [x] MongoDB Atlas DB Integration
+* [x] JWT & Google OAuth Flow
+* [x] Figma API Importer Module
+* [x] AI Component Detection via Gemini
+* [x] Clean React Code Generation
+* [ ] Advanced Live Preview sandbox
+* [ ] Export Project as ZIP / GitHub Push
+* [ ] Production Deployment & CI/CD pipeline
+
+---
+
+## 🤝 Contributing
+
+Contributions are always welcome! Feel free to fork this repository, open an issue, or submit a Pull Request.
+
+1. Fork the Project (`https://github.com/Namanraj-0007/DesignifyAI/fork`)
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## ⭐ Support
+
+If you like this project or found it helpful, please consider giving it a **⭐ on GitHub**—it helps immensely!
+
+Made with ❤️ by **Namandip Raj**
