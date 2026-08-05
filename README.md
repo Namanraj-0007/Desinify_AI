@@ -1,71 +1,158 @@
+````markdown
 <div align="center">
+
 # 🎨 Designify AI
-### 🚀 AI-Powered Figma to Production Code Generator
-Transform Figma designs into clean, reusable and production-ready React components using AI.
-<p align="center">
-<img src="https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react">
-<img src="https://img.shields.io/badge/FastAPI-Backend-green?style=for-the-badge&logo=fastapi">
-<img src="https://img.shields.io/badge/MongoDB-Atlas-success?style=for-the-badge&logo=mongodb">
-<img src="https://img.shields.io/badge/Google-OAuth-red?style=for-the-badge&logo=google">
-<img src="https://img.shields.io/badge/AI-Gemini-purple?style=for-the-badge">
-<img src="https://img.shields.io/github/license/YOUR_USERNAME/DesignifyAI?style=for-the-badge">
-</p>
+
+### ✨ AI-Powered Figma → Production-Ready React Code Generator
+
+> **Transform Figma designs into beautiful, reusable, and production-ready React components using Artificial Intelligence.**
+
+<br>
+
+## 🌐 Portfolio
+
+### **https://namandipraj.netlify.app/**
+
+<br>
+
+## 🚧 Project Status
+
+> **Currently under active development.**
+
+The complete application is being polished and deployment is in progress. While the live version is not available yet, you can explore the project through screenshots, architecture, source code, and the demo video below.
+
+<br>
+
+## 🎥 Project Walkthrough
+
+**Video Link:** `Coming Soon`
+
+*(Replace with your YouTube/Loom video after recording.)*
+
+<br>
+
+<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&duration=2500&pause=1000&center=true&vCenter=true&width=900&lines=AI+Powered+Frontend+Generator;Figma+to+Production+Code;React+%7C+FastAPI+%7C+MongoDB+%7C+Gemini;Build+Beautiful+Apps+Faster"/>
+
+<br>
+
+<img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react"/>
+<img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi"/>
+<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript"/>
+<img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite"/>
+<img src="https://img.shields.io/badge/TailwindCSS-38BDF8?style=for-the-badge&logo=tailwindcss"/>
+<img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb"/>
+<img src="https://img.shields.io/badge/Figma-000000?style=for-the-badge&logo=figma"/>
+<img src="https://img.shields.io/badge/Google-OAuth-EA4335?style=for-the-badge&logo=google"/>
+<img src="https://img.shields.io/badge/Gemini-AI-8E44AD?style=for-the-badge"/>
+
 ---
-### ⭐ Convert Designs → Components → Production Code
+
+# ⭐ Turn Designs Into Production Code with AI
+
 </div>
+
 ---
+
 # 📖 Overview
-Designify AI is an intelligent AI-powered platform that converts **Figma UI designs** into production-ready React code.
-Instead of manually recreating UI designs, developers can import Figma files and generate optimized React components with AI assistance.
+
+Designify AI is an intelligent AI-powered platform that converts **Figma UI Designs** into **production-ready React components**.
+
+Instead of manually recreating interfaces from scratch, simply import your Figma design and let AI analyze the layout, identify reusable components, and generate optimized React code within seconds.
+
 ---
+
 # ✨ Features
-✅ Secure JWT Authentication
-✅ Google OAuth Login
-✅ MongoDB Atlas Integration
-✅ AI-Powered UI Analysis
-✅ Figma API Integration
-✅ Component Detection
-✅ Responsive React Code Generation
-✅ Live Preview
-✅ Project Dashboard
-✅ Theme Support
-✅ Export Components
+
+- 🔐 JWT Authentication
+- 🌐 Google OAuth Login
+- 🎨 Figma API Integration
+- 🤖 AI UI Analysis
+- ⚡ Production Ready React Components
+- 📱 Responsive Code Generation
+- 💻 Live Component Preview
+- 📂 Project Dashboard
+- 🌙 Dark Theme Support
+- 📦 Export Generated Components
+- 🗄 MongoDB Atlas Integration
+- 🚀 FastAPI Backend
+
 ---
+
+# 🎯 Why Designify AI?
+
+✔ Save hours of frontend development
+
+✔ Reduce repetitive UI coding
+
+✔ Generate reusable React components
+
+✔ Improve productivity using AI
+
+✔ Modern full-stack architecture
+
+✔ Clean and scalable code generation
+
+---
+
 # 🛠 Tech Stack
-## Frontend
-- React
+
+### Frontend
+
+- React 19
 - TypeScript
 - Vite
 - Tailwind CSS
-## Backend
+
+### Backend
+
 - FastAPI
 - Python
 - JWT Authentication
 - Google OAuth
-## Database
+
+### Database
+
 - MongoDB Atlas
-## AI
+
+### AI
+
 - Gemini API
-## Design
+
+### Design Integration
+
 - Figma API
+
 ---
-# 🏗 Project Architecture
+
+# 🏗 System Architecture
+
 ```text
-               React + Vite
-                      │
-                      ▼
-                FastAPI Backend
-                      │
-       ┌──────────────┴──────────────┐
-       ▼                             ▼
- MongoDB Atlas                 Gemini AI
-       │                             │
-       └──────────────┬──────────────┘
-                      ▼
-                 Figma API
+                    🎨 Figma Design
+                           │
+                           ▼
+                     🔍 Figma API
+                           │
+                           ▼
+                  🧠 Gemini AI Engine
+                           │
+          ┌────────────────┴────────────────┐
+          ▼                                 ▼
+   UI Analysis                     Component Detection
+          │
+          ▼
+    React Code Generator
+          │
+          ▼
+     FastAPI Backend
+          │
+          ▼
+     MongoDB Atlas
 ```
+
 ---
-# 📂 Folder Structure
+
+# 📂 Project Structure
+
 ```text
 DesignifyAI
 │
@@ -86,79 +173,214 @@ DesignifyAI
 │   └── api
 │
 ├── docs
+│   ├── screenshots
+│   └── demo-video
+│
 └── README.md
 ```
+
 ---
+
+# 🎥 Project Demo
+
+> Replace this section with your YouTube or Loom recording.
+
+```
+https://YOUR_VIDEO_LINK
+```
+
+---
+
+# 📸 Screenshots
+
+## 🏠 Landing Page
+
+![Landing](docs/screenshots/landing.png)
+
+---
+
+## 📊 Dashboard
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+---
+
+## 🎨 Figma Import
+
+![Figma](docs/screenshots/figma-import.png)
+
+---
+
+## 🤖 AI Code Generation
+
+![Generated Code](docs/screenshots/generated-code.png)
+
+---
+
+## 🌙 Dark Mode
+
+![Dark Mode](docs/screenshots/dark-mode.png)
+
+---
+
 # 🚀 Installation
-Clone the repository
+
+Clone Repository
+
 ```bash
 git clone https://github.com/YOUR_USERNAME/DesignifyAI.git
 ```
-Frontend
+
+## Frontend
+
 ```bash
 cd frontend
+
 npm install
-copy .env.example .env
+
+cp .env.example .env
+
 npm run dev
 ```
-Backend
+
+---
+
+## Backend
+
 ```bash
 cd backend
+
 python -m venv .venv
+
 .venv\Scripts\activate
+
 pip install -r requirements.txt
+
 uvicorn app.main:app --reload --port 8000
 ```
-The app should now be available at:
-- Frontend: http://localhost:5073
-- Backend: http://localhost:8000
+
 ---
-# 🔑 Environment Variables
+
+# 🌍 Local URLs
+
+Frontend
+
+```
+http://localhost:5073
+```
+
 Backend
+
+```
+http://localhost:8000
+```
+
+---
+
+# 🔑 Environment Variables
+
+Backend
+
 ```env
 MONGODB_URI=
+
 JWT_SECRET=
+
 GOOGLE_CLIENT_ID=
+
 GOOGLE_CLIENT_SECRET=
+
 GOOGLE_REDIRECT_URI=
 ```
+
 Frontend
+
 ```env
 VITE_API_URL=http://localhost:8000
+
 VITE_GOOGLE_CLIENT_ID=
 ```
+
 ---
-# 📸 Screenshots
-Coming Soon
+
+# 📈 Development Roadmap
+
+- ✅ Authentication
+- ✅ JWT
+- ✅ MongoDB Atlas
+- ✅ Google OAuth
+- 🚧 Figma Import
+- 🚧 AI Component Detection
+- 🚧 React Code Generation
+- 🚧 Live Preview
+- 🚧 Export Project
+- 🚧 Cloud Deployment
+
 ---
-# 🗺 Roadmap
-- [x] Authentication
-- [x] MongoDB Atlas
-- [x] JWT
-- [x] Google OAuth
-- [ ] Figma Import
-- [ ] AI Component Detection
-- [ ] React Code Generation
-- [ ] Live Preview
-- [ ] Export Project
-- [ ] Deployment
+
+# 📊 Project Status
+
+| Feature | Status |
+|----------|:------:|
+| Authentication | ✅ |
+| Google OAuth | ✅ |
+| MongoDB | ✅ |
+| Dashboard | ✅ |
+| Figma Import | 🚧 |
+| AI Analysis | 🚧 |
+| React Generation | 🚧 |
+| Export Project | 🚧 |
+| Deployment | 🚧 |
+
 ---
+
 # 🤝 Contributing
-Contributions are welcome.
-Feel free to fork the project and submit a Pull Request.
+
+Contributions are welcome!
+
+1. Fork the repository.
+2. Create a new branch.
+3. Commit your changes.
+4. Push your branch.
+5. Open a Pull Request.
+
 ---
+
 # ⭐ Support
-If you like this project, consider giving it a ⭐ on GitHub.
+
+If you found this project useful:
+
+⭐ Star the repository
+
+🍴 Fork the project
+
+💬 Share your feedback
+
 ---
+
+# 📬 Connect With Me
+
+🌐 **Portfolio**
+
+https://namandipraj.netlify.app/
+
+💻 **GitHub**
+
+https://github.com/Namanraj-0007
+
+💼 **LinkedIn**
+
+(Add Your LinkedIn URL)
+
+---
+
 <div align="center">
-### Made with ❤️ by Naman Raj
-### Designed by Namandip raj with ❤️
+
+# ❤️ Built with Passion by Naman Raj
+
+### ⭐ If you enjoyed this project, consider giving it a Star!
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6C63FF,100:00D4FF&height=150&section=footer"/>
+
 </div>
- 
-
-
-make it 3d modified readme with screen recording section of the project and the ss area for it . 
-
-an din above there should be lionk  fot my deployed portfolio 
-
-in short make it full 3d and best
+````
