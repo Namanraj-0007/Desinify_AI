@@ -9,22 +9,22 @@
       }
     },
     {
-      "src": "api/index.py",
+      "src": "backend/api/index.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "dest": "/backend/api/index.py"
     },
     {
       "src": "/docs",
-      "dest": "/api/index.py"
+      "dest": "/backend/api/index.py"
     },
     {
       "src": "/openapi.json",
-      "dest": "/api/index.py"
+      "dest": "/backend/api/index.py"
     },
     {
       "src": "/(.*\\.(?:css|js|png|jpg|jpeg|svg|ico|webp|woff2?|ttf|map))",
