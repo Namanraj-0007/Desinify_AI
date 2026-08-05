@@ -46,14 +46,13 @@ Instead of manually recreating UI components block-by-block, developers can impo
 
 <div align="center">
 
-🎬 A full walkthrough of Designify AI in action — from Figma import to generated React code.
+🎬 **A full walkthrough of Designify AI in action — from Figma import to generated React code.**
 
-<!-- You can replace this with your actual video link/GIF preview -->
-<a href="#">
-  <img src="[https://placehold.co/1200x675/1a1a1a/A855F7?text=](https://youtu.be/mu2l5VrZlyA)▶+Click+to+Watch+Designify+AI+Demo" alt="Watch the demo" width="100%">
+<a href="https://youtu.be/mu2l5VrZlyA">
+  <img src="https://placehold.co/1200x675/1a1a1a/A855F7?text=▶+Click+to+Watch+Designify+AI+Demo" alt="Watch the demo" width="100%">
 </a>
 
-<sub>👆 Click above or add your recording to <code>docs/media/demo.gif</code></sub>
+<sub>👆 Click to watch the full demo on YouTube</sub>
 
 </div>
 
