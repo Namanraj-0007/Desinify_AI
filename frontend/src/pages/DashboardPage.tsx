@@ -76,6 +76,10 @@ export default function DashboardPage() {
       const res = await API.get('/projects')
       setProjects(res.data.projects)
     } catch (e: any) {
+      if (e?.message?.includes('login again') || e?.message?.includes('expired') || e?.message?.includes('Invalid JWT')) {
+        navigate('/auth')
+        return
+      }
       setError(e?.message ?? 'Failed to fetch projects')
     } finally {
       setLoading(false)

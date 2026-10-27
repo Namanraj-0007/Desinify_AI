@@ -1,6 +1,7 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from jose.exceptions import ExpiredSignatureError
 from app.utils.jwt import decode_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -21,6 +22,8 @@ async def get_current_user_id(
 
     try:
         payload = decode_token(token)
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Token expired')
     except Exception:
         raise HTTPException(status_code=401, detail='Invalid token')
 

@@ -40,6 +40,22 @@ class InMemoryCursor:
             return dict(doc)
         return {k: doc[k] for k in self._projection if k in doc}
 
+    def limit(self, count: int):
+        self._docs = self._docs[:count]
+        return self
+
+    def skip(self, count: int):
+        self._docs = self._docs[count:]
+        return self
+
+    async def to_list(self, length: Optional[int] = None) -> list[Dict[str, Any]]:
+        results = []
+        async for doc in self:
+            results.append(doc)
+            if length is not None and len(results) >= length:
+                break
+        return results
+
 
 class InMemoryCollection:
     def __init__(self, name: str):
@@ -130,10 +146,12 @@ class InMemoryDatabase:
 
 class InMemoryClient:
     def __init__(self):
-        self._db = InMemoryDatabase()
+        self._dbs: Dict[str, InMemoryDatabase] = {}
 
-    def __getitem__(self, name: str):
-        return self._db[name]
+    def __getitem__(self, name: str) -> InMemoryDatabase:
+        if name not in self._dbs:
+            self._dbs[name] = InMemoryDatabase()
+        return self._dbs[name]
 
     class Admin:
         async def command(self, *args, **kwargs):
@@ -150,8 +168,11 @@ _fallback_enabled = False
 
 
 def set_mongo_fallback_enabled(enabled: bool) -> None:
-    global _fallback_enabled
+    global _fallback_enabled, _client, _db
     _fallback_enabled = enabled
+    if enabled and not isinstance(_client, InMemoryClient):
+        _client = InMemoryClient()
+        _db = _client['default']
 
 
 def get_client() -> AsyncIOMotorClient | InMemoryClient:

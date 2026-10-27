@@ -1,8 +1,23 @@
 from __future__ import annotations
 
 from typing import Any, Dict
+from pathlib import Path
+from dotenv import load_dotenv
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+ROOT_DIR = BACKEND_DIR.parent
+ENV_FILES = [
+    str(BACKEND_DIR / '.env'),
+    str(ROOT_DIR / '.env'),
+    '.env',
+]
+
+for _p in ENV_FILES:
+    if Path(_p).is_file():
+        load_dotenv(dotenv_path=_p, override=False)
 
 
 class Settings(BaseSettings):
@@ -45,7 +60,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         # Allow environment variables even if .env isn't loadable in some runners.
-        env_file='.env',
+        env_file=ENV_FILES,
         env_file_encoding='utf-8',
         extra='ignore',
         case_sensitive=False,

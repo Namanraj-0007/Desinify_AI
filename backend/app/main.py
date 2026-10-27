@@ -1,7 +1,8 @@
 import sys
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Load .env BEFORE importing settings so env_file-based settings are populated reliably.
@@ -39,20 +40,27 @@ def create_app() -> FastAPI:
     # This application was designed by Namandip raj with love ❤️
 
 
-    # CORS: support single origin, comma-separated list, or wildcard.
+    # CORS: robust origin list supporting localhost on any port
     cors = (settings.cors_origins or '*').strip()
-    # If '*' allow all origins.
+    local_dev_origins = [
+        'http://localhost:5073',
+        'http://localhost:5173',
+        'http://127.0.0.1:5073',
+        'http://127.0.0.1:5173',
+    ]
     if cors == '*' or cors.lower() == 'true':
-        origins = ['*']
+        origins = local_dev_origins
     else:
         origins = [o.strip() for o in cors.split(',') if o.strip()]
-
+        for dev_url in local_dev_origins:
+            if dev_url not in origins:
+                origins.append(dev_url)
 
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
-        allow_origin_regex=None,
-        allow_credentials=False,
+        allow_origin_regex=r'^https?://(localhost|127\.0\.0\.1)(:\d+)?$',
+        allow_credentials=True,
         allow_methods=['*'],
         allow_headers=['*'],
     )
@@ -79,7 +87,7 @@ def create_app() -> FastAPI:
             print(f"[startup] config logging skipped: {exc}")
 
         try:
-            mongo_err = await ping_mongo(timeout_s=2.5)
+            mongo_err = await ping_mongo(timeout_s=5.0)
             if mongo_err == "ok":
                 print(f"[startup] MongoDB connected OK (db={settings.database_name})")
             else:
@@ -111,6 +119,15 @@ def create_app() -> FastAPI:
             pass
         response = await call_next(request)
         return response
+
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Internal server error: {str(exc)}"},
+        )
 
     return app
 

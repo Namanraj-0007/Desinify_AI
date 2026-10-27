@@ -11,8 +11,39 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function getToken() {
-  return localStorage.getItem('access_token') ?? localStorage.getItem('token')
+function isTokenValid(token: string | null): boolean {
+  if (!token || token === 'undefined' || token === 'null') return false
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return false
+    const base64Url = parts[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    const payload = JSON.parse(jsonPayload)
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      return false
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
+function getStoredToken(): string | null {
+  const token = localStorage.getItem('access_token') ?? localStorage.getItem('token')
+  if (!isTokenValid(token)) {
+    if (token) {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('token')
+    }
+    return null
+  }
+  return token
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -20,8 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setToken(getToken())
+    setToken(getStoredToken())
     setLoading(false)
+
+    const handleAuthLogout = () => {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('token')
+      setToken(null)
+    }
+
+    window.addEventListener('auth:logout', handleAuthLogout)
+    return () => window.removeEventListener('auth:logout', handleAuthLogout)
   }, [])
 
   const value = useMemo<AuthContextValue>(
@@ -32,20 +72,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const res = await API.post('/auth/signup', { name, email, password })
 
         if (res.data?.access_token) {
-          const token = res.data.access_token
-          localStorage.setItem('access_token', token)
-          localStorage.setItem('token', token)
-          setToken(token)
+          const newToken = res.data.access_token
+          localStorage.setItem('access_token', newToken)
+          localStorage.setItem('token', newToken)
+          setToken(newToken)
         }
       },
       async login(email, password) {
         const res = await API.post('/auth/login', { email, password })
 
         if (res.data?.access_token) {
-          const token = res.data.access_token
-          localStorage.setItem('access_token', token)
-          localStorage.setItem('token', token)
-          setToken(token)
+          const newToken = res.data.access_token
+          localStorage.setItem('access_token', newToken)
+          localStorage.setItem('token', newToken)
+          setToken(newToken)
         }
       },
       logout() {
@@ -54,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(null)
       }
     }),
-    [token]
+    [token, loading]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -65,5 +105,3 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
 }
-
-
