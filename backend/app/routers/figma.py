@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from bson import ObjectId
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.config.settings import settings
 from app.routers.utils.auth import get_current_user_id
 from app.schemas.figma import (
     FigmaImportPayload,
@@ -26,6 +27,7 @@ from app.services.design_parser import parse_design
 from app.services.figma_service import (
     FigmaServiceError,
     extract_file_key_from_url,
+    extract_node_id_from_url,
     fetch_file_json,
     fetch_figma_me,
     fetch_image_render,
@@ -40,14 +42,43 @@ figma_projects = get_db()['figma_projects']
 figma_tokens = get_db()['figma_tokens']
 
 
-async def _get_user_token(user_id: str) -> str:
+async def _get_user_token(user_id: str, explicit_token: Optional[str] = None) -> str:
+    # 1. Direct explicit token provided in request payload
+    if explicit_token and explicit_token.strip():
+        token = explicit_token.strip()
+        try:
+            me = await fetch_figma_me(token)
+            await figma_tokens.update_one(
+                {'user_id': user_id},
+                {'$set': {'user_id': user_id, 'access_token': token, 'figma_me': me}},
+                upsert=True,
+            )
+        except Exception:
+            await figma_tokens.update_one(
+                {'user_id': user_id},
+                {'$set': {'user_id': user_id, 'access_token': token}},
+                upsert=True,
+            )
+        return token
+
+    # 2. Stored token in MongoDB
     doc = await figma_tokens.find_one({'user_id': user_id})
-    if not doc or not doc.get('access_token'):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Figma token not connected for this user',
-        )
-    return doc['access_token']
+    if doc and doc.get('access_token'):
+        return doc['access_token']
+
+    # 3. Environment or system fallback token
+    if getattr(settings, 'figma_access_token', None) and settings.figma_access_token.strip():
+        return settings.figma_access_token.strip()
+
+    # 4. Clear guidance for user
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=(
+            'Figma Personal Access Token is required. '
+            'Please paste your Figma token (starts with figd_) in the dashboard or include it in the request. '
+            'To generate a token: Figma -> Settings -> Security -> Personal access tokens.'
+        ),
+    )
 
 
 @router.post('/token', response_model=dict)
@@ -59,10 +90,18 @@ async def connect_token(payload: FigmaTokenPayload, user_id: str = Depends(get_c
 
     await figma_tokens.update_one(
         {'user_id': user_id},
-        {'$set': {'user_id': user_id, 'access_token': payload.access_token, 'figma_me': me}},
+        {'$set': {'user_id': user_id, 'access_token': payload.access_token.strip(), 'figma_me': me}},
         upsert=True,
     )
-    return {'ok': True, 'connected': True}
+    return {
+        'ok': True,
+        'connected': True,
+        'user': {
+            'handle': me.get('handle') or me.get('name'),
+            'email': me.get('email'),
+            'img_url': me.get('img_url'),
+        },
+    }
 
 
 @router.post('/import', response_model=ImportResponse)
@@ -71,20 +110,29 @@ async def import_by_url(
     user_id: str = Depends(get_current_user_id),
 ):
     try:
-        token = await _get_user_token(user_id)
         file_key = extract_file_key_from_url(payload.figma_url)
+        node_id = extract_node_id_from_url(payload.figma_url)
+        token = await _get_user_token(user_id, explicit_token=payload.access_token)
 
-        raw = await fetch_file_json(access_token=token, file_key=file_key)
+        raw = await fetch_file_json(access_token=token, file_key=file_key, node_id=node_id)
         parsed = parse_design(raw)
 
         design_tokens = parsed.get('design_tokens', {})
         component_tree = parsed.get('component_tree', {})
         stats = parsed.get('stats', {})
 
+        figma_doc_name = raw.get('name') or 'Figma Import'
+        project_title = (
+            payload.project_name
+            if payload.project_name and payload.project_name != 'Figma Import'
+            else figma_doc_name
+        )
+
         now_payload: Dict[str, Any] = {
             'user_id': user_id,
-            'project_name': payload.project_name or 'Figma Import',
+            'project_name': project_title,
             'figma_file_key': file_key,
+            'selected_frame_id': node_id or None,
             'raw_json': raw,
             'parsed': parsed,
             'created_at': datetime.now(timezone.utc).isoformat(),
@@ -124,11 +172,28 @@ async def import_by_url(
 
 @router.get('/connected', response_model=dict)
 async def connected(user_id: str = Depends(get_current_user_id)):
-    doc = await figma_tokens.find_one({'user_id': user_id}, {'access_token': 1})
-    return {'connected': bool(doc)}
+    doc = await figma_tokens.find_one({'user_id': user_id}, {'access_token': 1, 'figma_me': 1})
+    has_token = bool(doc and doc.get('access_token'))
+    has_env = bool(getattr(settings, 'figma_access_token', None) and settings.figma_access_token.strip())
+
+    user_info = None
+    if doc and doc.get('figma_me'):
+        me = doc['figma_me']
+        user_info = {
+            'handle': me.get('handle') or me.get('name'),
+            'email': me.get('email'),
+            'img_url': me.get('img_url'),
+        }
+
+    return {
+        'connected': has_token or has_env,
+        'has_user_token': has_token,
+        'has_env_token': has_env,
+        'user': user_info,
+    }
 
 
-# --- New endpoints for Phase 2 ---
+# --- Figma Project Management Endpoints ---
 
 @router.get('/projects', response_model=FigmaProjectsListResponse)
 async def list_figma_projects(user_id: str = Depends(get_current_user_id)):
@@ -172,7 +237,6 @@ async def get_figma_project_detail(
     design_tokens = parsed.get('design_tokens', {})
     stats = parsed.get('stats', {}) or {}
 
-    # Convert raw dicts to typed schemas
     frames = [FrameDetail(**f) for f in design_tokens.get('frames', [])]
     components = [ComponentDetail(**c) for c in design_tokens.get('components', [])]
     images = [ImageDetail(**i) for i in design_tokens.get('images', [])]
@@ -359,4 +423,3 @@ async def delete_figma_project(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f'Failed to delete project: {e}')
-

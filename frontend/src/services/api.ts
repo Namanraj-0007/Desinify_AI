@@ -12,7 +12,7 @@ export const API = axios.create({
 })
 
 type ApiErrorShape = {
-  detail?: string
+  detail?: any
 }
 
 /* ─── Helper: read JWT from localStorage ─────────────────────────────── */
@@ -31,15 +31,19 @@ const AUTH_ERROR_MAP: Record<string, string> = {
   'Could not validate credentials': 'Session expired. Please login again.',
 }
 
-function buildErrorMessage(raw: string | undefined, status: number | undefined, axiosMessage?: string): string {
-  if (status === 401 && raw && AUTH_ERROR_MAP[raw]) {
+function buildErrorMessage(raw: any, status: number | undefined, axiosMessage?: string): string {
+  if (status === 401 && typeof raw === 'string' && AUTH_ERROR_MAP[raw]) {
     return AUTH_ERROR_MAP[raw]
   }
-  if (status === 400 && raw?.toLowerCase().includes('figma token')) {
-    return 'Figma Personal Access Token is invalid.'
-  }
-  if (raw) {
+  if (typeof raw === 'string' && raw.trim()) {
     return raw
+  }
+  if (Array.isArray(raw) && raw.length > 0) {
+    const first = raw[0]
+    return first?.msg || first?.message || 'Invalid input data'
+  }
+  if (raw && typeof raw === 'object' && raw.message) {
+    return raw.message
   }
   if (axiosMessage && axiosMessage !== 'Error') {
     if (axiosMessage.toLowerCase().includes('network error')) {

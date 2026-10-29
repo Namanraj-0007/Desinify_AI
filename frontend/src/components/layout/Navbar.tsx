@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../context/AuthContext'
-import { Button } from '../ui/button'
+import { Button } from '../ui/Button'
 import { cn } from '../../lib/utils'
 
 const navItems = [
@@ -34,7 +34,7 @@ export default function Navbar() {
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
         scrolled
-          ? 'bg-background/80 backdrop-blur-xl border-b border-border/50'
+          ? 'bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-[0_10px_30px_rgba(0,0,0,0.5)]'
           : 'bg-transparent'
       )}
     >
@@ -42,14 +42,14 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center shadow-[0_0_20px_hsl(252_87%_65%/0.3)] group-hover:shadow-[0_0_30px_hsl(252_87%_65%/0.4)] transition-shadow">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)] group-hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition-shadow">
               <span className="text-sm font-bold text-white">D</span>
             </div>
             <span className="font-display font-semibold text-lg tracking-tight text-foreground hidden sm:block">
               Designify <span className="text-gradient">AI</span>
             </span>
-            <span className="hidden lg:block text-[9px] text-muted-foreground/40 italic leading-tight max-w-[80px]">
-              Designed by Namandip raj
+            <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/20">
+              by Namandip Raj
             </span>
           </Link>
 
@@ -121,8 +121,8 @@ export default function Navbar() {
                 >
                   Sign in
                 </Button>
-                <Button variant="gradient" size="sm" onClick={() => navigate('/auth')}>
-                  Get started
+                <Button variant="gradient" size="sm" onClick={() => navigate('/auth')} className="shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                  Launch Studio
                 </Button>
               </>
             )}
@@ -195,4 +195,3 @@ export default function Navbar() {
     </header>
   )
 }
-

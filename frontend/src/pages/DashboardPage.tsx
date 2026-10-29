@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { API } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -8,8 +8,11 @@ import {
   importFigmaByUrl,
   listFigmaProjects,
   deleteFigmaProject,
+  getFigmaConnected,
+  extractFigmaFileKey,
   FigmaProjectSummary,
   FigmaImportResponse,
+  FigmaConnectedStatus,
 } from '../api/figma'
 import { FigmaParserPanels } from '../components/figma/FigmaParserPanels'
 import { FigmaProjectCard } from '../components/figma/FigmaProjectCard'
@@ -26,13 +29,6 @@ type Project = {
   created_at: string
 }
 
-const statsCards = [
-  { label: 'Total Projects', value: '—', icon: '📁' },
-  { label: 'Components Generated', value: '—', icon: '⚛️' },
-  { label: 'AI Edits Used', value: '—', icon: '🤖' },
-  { label: 'Storage Used', value: '—', icon: '💾' },
-]
-
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { token } = useAuth()
@@ -44,11 +40,16 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
 
+  // Figma state
   const [figmaToken, setFigmaToken] = useState('')
   const [figmaUrl, setFigmaUrl] = useState('')
   const [figmaBusy, setFigmaBusy] = useState(false)
   const [figmaStep, setFigmaStep] = useState<string | null>(null)
   const [figmaResult, setFigmaResult] = useState<FigmaImportResponse | null>(null)
+  const [figmaStatus, setFigmaStatus] = useState<FigmaConnectedStatus>({ connected: false })
+  const [showTokenInput, setShowTokenInput] = useState(false)
+
+  const detectedFileKey = extractFigmaFileKey(figmaUrl)
 
   const totalFigmaComponents = figmaProjects.reduce(
     (sum, project) => sum + (project.stats?.total_components ?? 0),
@@ -98,10 +99,32 @@ export default function DashboardPage() {
     }
   }, [])
 
+  const checkFigmaConnection = useCallback(async () => {
+    try {
+      const res = await getFigmaConnected()
+      setFigmaStatus(res)
+      if (!res.connected) {
+        setShowTokenInput(true)
+      }
+    } catch {
+      // If error checking connected status
+      setFigmaStatus({ connected: false })
+      setShowTokenInput(true)
+    }
+  }, [])
+
   useEffect(() => {
     refresh()
     refreshFigmaProjects()
-  }, [refreshFigmaProjects])
+    checkFigmaConnection()
+
+    // Restore any Figma URL from session storage (e.g. from Landing Page upload zone)
+    const storedUrl = sessionStorage.getItem('figmaUrl')
+    if (storedUrl) {
+      setFigmaUrl(storedUrl)
+      sessionStorage.removeItem('figmaUrl')
+    }
+  }, [refreshFigmaProjects, checkFigmaConnection])
 
   async function createProject() {
     if (!newName.trim()) return
@@ -144,6 +167,27 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Global Error Banner */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-xs sm:text-sm text-red-300 flex items-start gap-3 backdrop-blur-md"
+          >
+            <span className="text-red-400 font-bold shrink-0 text-base">⚠️</span>
+            <div className="flex-1">
+              <div className="font-semibold text-red-200">Import Issue</div>
+              <div className="mt-0.5 leading-relaxed">{error}</div>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-200 text-xs px-2 py-1 rounded bg-white/5"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
+
         {/* Import Results */}
         {figmaResult && (
           <motion.div
@@ -155,14 +199,14 @@ export default function DashboardPage() {
               <div className="glass rounded-2xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-display text-lg font-semibold">Import Results</h3>
+                    <h3 className="font-display text-lg font-semibold text-white">Import Complete ✓</h3>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {figmaResult.stats?.total_frames || 0} frames &middot; {figmaResult.stats?.total_components || 0} components &middot; {figmaResult.colors.length} colors &middot; {figmaResult.typography.length} typography styles
+                      File Key: <code className="font-mono text-cyan-400">{figmaResult.figma_file_key}</code> &middot; {figmaResult.stats?.total_frames || 0} frames &middot; {figmaResult.stats?.total_components || 0} components &middot; {figmaResult.colors.length} colors &middot; {figmaResult.typography.length} typography styles
                     </p>
                   </div>
                   <button
                     onClick={() => navigate('/dashboard/figma/' + figmaResult.project_id)}
-                    className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
+                    className="px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 transition-colors text-xs font-medium"
                   >
                     View Details &rarr;
                   </button>
@@ -182,7 +226,7 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] gap-8">
           {/* Sidebar */}
           <aside className="space-y-6 lg:sticky lg:top-24">
             {/* Stats mini-cards */}
@@ -198,84 +242,167 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* Figma Integration */}
+            {/* Figma Integration Card */}
             <SpotlightCard className="rounded-2xl">
               <div className="glass rounded-2xl p-5 space-y-4">
-                <div>
-                  <h3 className="font-display font-semibold text-sm">Figma Integration</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Connect your Figma token and import designs.</p>
-                </div>
-                <div className="space-y-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Access Token</label>
+                    <h3 className="font-display font-semibold text-sm text-white">Figma Sync Studio</h3>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Parse frames, styles, and vector tokens.</p>
+                  </div>
+                  {figmaStatus.connected ? (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Connected
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                      Token Required
+                    </span>
+                  )}
+                </div>
+
+                {/* Token Status / Input Area */}
+                {figmaStatus.connected && !showTokenInput ? (
+                  <div className="rounded-xl bg-white/[0.03] border border-white/10 p-3 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="h-7 w-7 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                        🎨
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-medium text-white text-[11px] truncate">
+                          {figmaStatus.user?.handle ? `@${figmaStatus.user.handle}` : 'Personal Token Active'}
+                        </div>
+                        <div className="text-[10px] text-slate-400">Authenticated with Figma</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowTokenInput(true)}
+                      className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors"
+                    >
+                      Update
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2 rounded-xl bg-black/30 border border-white/10 p-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-medium text-slate-300">Personal Access Token</label>
+                      <a
+                        href="https://www.figma.com/settings"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-indigo-400 hover:text-indigo-300 transition-colors"
+                      >
+                        Get Token &rarr;
+                      </a>
+                    </div>
                     <Input
+                      type="password"
                       value={figmaToken}
                       onChange={(e) => setFigmaToken(e.target.value)}
                       placeholder="figd_..."
-                      className="text-xs h-9"
+                      className="text-xs h-8 bg-black/40 border-white/15"
                     />
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        className="flex-1 h-7 text-xs bg-indigo-600 hover:bg-indigo-500 text-white"
+                        disabled={figmaBusy || !figmaToken.trim()}
+                        onClick={async () => {
+                          setFigmaBusy(true)
+                          setFigmaStep('Validating...')
+                          setError(null)
+                          try {
+                            const res = await connectFigmaToken(figmaToken.trim())
+                            setFigmaStep('Connected ✓')
+                            setFigmaStatus({
+                              connected: true,
+                              user: res.user,
+                            })
+                            setShowTokenInput(false)
+                          } catch (e: any) {
+                            setError(e?.message ?? 'Failed to connect token')
+                            setFigmaStep(null)
+                          } finally {
+                            setFigmaBusy(false)
+                            setTimeout(() => setFigmaStep(null), 1500)
+                          }
+                        }}
+                      >
+                        {figmaBusy && figmaStep ? figmaStep : 'Save Token'}
+                      </Button>
+                      {figmaStatus.connected && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs text-slate-400"
+                          onClick={() => setShowTokenInput(false)}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-[9px] text-slate-500 leading-normal">
+                      Figma Settings &rarr; Security &rarr; Personal access tokens &rarr; Generate new token.
+                    </p>
                   </div>
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    disabled={figmaBusy || !figmaToken.trim()}
-                    onClick={async () => {
-                      setFigmaBusy(true)
-                      setFigmaStep('Validating...')
-                      setError(null)
-                      try {
-                        await connectFigmaToken(figmaToken.trim())
-                        setFigmaStep('Connected ✓')
-                      } catch (e: any) {
-                        setError(e?.message ?? 'Failed to connect')
-                        setFigmaStep(null)
-                      } finally {
-                        setFigmaBusy(false)
-                        setTimeout(() => setFigmaStep(null), 1500)
-                      }
-                    }}
-                  >
-                    {figmaBusy && figmaStep ? figmaStep : 'Connect'}
-                  </Button>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">File URL</label>
-                    <Input
-                      value={figmaUrl}
-                      onChange={(e) => setFigmaUrl(e.target.value)}
-                      placeholder="https://www.figma.com/file/..."
-                      className="text-xs h-9"
-                    />
+                )}
+
+                {/* File URL Input */}
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs text-slate-300 font-medium">Figma File URL or Key</label>
+                    {detectedFileKey && (
+                      <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                        <span>✓</span> Key: {detectedFileKey.slice(0, 8)}...
+                      </span>
+                    )}
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full"
-                    disabled={figmaBusy || !figmaUrl.trim()}
-                    onClick={async () => {
-                      setFigmaBusy(true)
-                      setFigmaStep('Importing...')
-                      setError(null)
-                      setFigmaResult(null)
-                      try {
-                        const res = await importFigmaByUrl({
-                          figma_url: figmaUrl.trim(),
-                          project_name: 'Figma Import',
-                        })
-                        setFigmaResult(res)
-                        setFigmaStep('Complete ✓')
-                        await refreshFigmaProjects()
-                      } catch (e: any) {
-                        setError(e?.message ?? 'Import failed')
-                        setFigmaStep(null)
-                      } finally {
-                        setFigmaBusy(false)
-                        setTimeout(() => setFigmaStep(null), 1500)
-                      }
-                    }}
-                  >
-                    {figmaBusy && figmaStep ? figmaStep : 'Import'}
-                  </Button>
+                  <Input
+                    value={figmaUrl}
+                    onChange={(e) => setFigmaUrl(e.target.value)}
+                    placeholder="https://www.figma.com/design/... or /file/..."
+                    className="text-xs h-9 bg-black/40 border-white/15"
+                  />
+                  {figmaUrl.trim() && !detectedFileKey && (
+                    <p className="text-[10px] text-amber-400/90 leading-tight">
+                      Note: Paste any standard Figma link (/design, /file, /proto, /board) or raw file key.
+                    </p>
+                  )}
                 </div>
+
+                {/* Import Action Button */}
+                <Button
+                  size="sm"
+                  className="w-full h-9 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-medium text-xs shadow-lg shadow-indigo-500/20"
+                  disabled={figmaBusy || !figmaUrl.trim()}
+                  onClick={async () => {
+                    setFigmaBusy(true)
+                    setFigmaStep('Importing design...')
+                    setError(null)
+                    setFigmaResult(null)
+                    try {
+                      const res = await importFigmaByUrl({
+                        figma_url: figmaUrl.trim(),
+                        project_name: 'Figma Import',
+                        access_token: figmaToken.trim() || undefined,
+                      })
+                      setFigmaResult(res)
+                      setFigmaStep('Complete ✓')
+                      setFigmaStatus((prev) => ({ ...prev, connected: true }))
+                      setShowTokenInput(false)
+                      await refreshFigmaProjects()
+                    } catch (e: any) {
+                      setError(e?.message ?? 'Import failed. Check your Figma URL and token.')
+                      setFigmaStep(null)
+                    } finally {
+                      setFigmaBusy(false)
+                      setTimeout(() => setFigmaStep(null), 1500)
+                    }
+                  }}
+                >
+                  {figmaBusy && figmaStep ? figmaStep : 'Import Figma Design'}
+                </Button>
               </div>
             </SpotlightCard>
 
@@ -304,8 +431,10 @@ export default function DashboardPage() {
             ) : (
               <SpotlightCard className="rounded-2xl">
                 <div className="glass rounded-2xl p-5 text-sm text-muted-foreground">
-                  <div className="font-display font-semibold text-sm mb-2">No imported Figma projects yet.</div>
-                  <p>Connect your Figma token and import a file to see parsed design projects here.</p>
+                  <div className="font-display font-semibold text-sm mb-2 text-white">No imported Figma projects yet.</div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Connect your Figma token and paste a file URL above to extract frames, components, color tokens, and generate clean React code.
+                  </p>
                 </div>
               </SpotlightCard>
             )}
@@ -335,17 +464,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             </SpotlightCard>
-
-            {/* Error */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300"
-              >
-                {error}
-              </motion.div>
-            )}
 
             {/* Projects list */}
             <SpotlightCard className="rounded-2xl">

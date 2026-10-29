@@ -25,7 +25,7 @@ export default function Footer() {
   const handleSubscribe = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
-    const email = (form.elements.nativeElement as HTMLInputElement)?.value || (form.querySelector('[type="email"]') as HTMLInputElement)?.value
+    const email = (form.querySelector('[type="email"]') as HTMLInputElement)?.value
     if (email) {
       window.location.href = `mailto:namandraj4777@gmail.com?subject=Newsletter Subscription&body=Please subscribe me to the Designify AI newsletter.%0D%0A%0D%0AMy email: ${encodeURIComponent(email)}`
     }
@@ -53,22 +53,14 @@ export default function Footer() {
               Convert UI screenshots into production-ready React components powered by AI. Ship faster with Designify AI.
             </p>
 
-            {/* Social proof - mini stats */}
-            <div className="mt-6 flex items-center gap-4">
-              <div className="flex -space-x-2">
-                {[...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500/30 to-fuchsia-500/30 border-2 border-background flex items-center justify-center"
-                  >
-                    <span className="text-[8px] font-bold text-indigo-300">
-                      {String.fromCharCode(65 + i)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <span className="text-[10px] text-muted-foreground">
-                Trusted by <span className="text-foreground font-medium">500+</span> creators
+            {/* Project & Creator Badge */}
+            <div className="mt-6 flex items-center gap-2.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Crafted by <strong className="text-foreground font-medium">Namandip Raj</strong>
               </span>
             </div>
           </div>
@@ -181,4 +173,3 @@ export default function Footer() {
     </footer>
   )
 }
-

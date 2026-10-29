@@ -2,7 +2,15 @@ import { API } from '../services/api'
 
 // ─── Response Types ───────────────────────────────────────────────
 
-export type ConnectFigmaResponse = { ok: boolean; connected?: boolean }
+export type ConnectFigmaResponse = {
+  ok: boolean
+  connected?: boolean
+  user?: {
+    handle?: string
+    email?: string
+    img_url?: string
+  }
+}
 
 export type FigmaImportResponse = {
   project_id: string
@@ -109,29 +117,70 @@ export type FigmaProjectDetail = {
 }
 
 export type ImageRenderResult = {
-  images: Record<string, string>  // node_id -> image_url
+  images: Record<string, string> // node_id -> image_url
+}
+
+export type FigmaConnectedStatus = {
+  connected: boolean
+  has_user_token?: boolean
+  has_env_token?: boolean
+  user?: {
+    handle?: string
+    email?: string
+    img_url?: string
+  } | null
+}
+
+// ─── Client Helper: Extract file key for instant UI feedback ─────
+
+export function extractFigmaFileKey(urlOrKey: string): string | null {
+  if (!urlOrKey) return null
+  const cleaned = decodeURIComponent(urlOrKey.trim().replace(/^["']|["']$/g, ''))
+
+  // 1. /design/branch/:key or /file/branch/:key
+  const branchMatch = cleaned.match(/\/(?:file|design|proto|board)\/branch\/([a-zA-Z0-9_\-]{10,})/)
+  if (branchMatch) return branchMatch[1]
+
+  // 2. Standard /(file|design|proto|board)/:key
+  const stdMatch = cleaned.match(/\/(?:file|design|proto|board)\/([a-zA-Z0-9_\-]{10,})/)
+  if (stdMatch) return stdMatch[1]
+
+  // 3. /community/file/:key
+  const comMatch = cleaned.match(/\/community\/file\/([0-9a-zA-Z_\-]{10,})/)
+  if (comMatch) return comMatch[1]
+
+  // 4. Raw key (15-45 base62 or alphanumeric chars)
+  const keyOnly = cleaned.split('?')[0].split('#')[0].replace(/^\/+|\/+$/g, '')
+  if (/^[a-zA-Z0-9_\-]{10,45}$/.test(keyOnly) && !keyOnly.startsWith('http') && !keyOnly.startsWith('figma')) {
+    return keyOnly
+  }
+
+  return null
 }
 
 // ─── API Functions ────────────────────────────────────────────────
 
 export async function connectFigmaToken(accessToken: string): Promise<ConnectFigmaResponse> {
-  // Send as JSON to match Pydantic BaseModel expectation on the backend
-  const res = await API.post('/figma/token', { access_token: accessToken })
+  const res = await API.post('/figma/token', { access_token: accessToken.trim() })
   return res.data
 }
 
-export type ImportByUrlPayload = { figma_url: string; project_name?: string }
+export type ImportByUrlPayload = {
+  figma_url: string
+  project_name?: string
+  access_token?: string
+}
 
 export async function importFigmaByUrl(payload: ImportByUrlPayload): Promise<FigmaImportResponse> {
-  // Send as JSON to match Pydantic BaseModel expectation on the backend
   const res = await API.post('/figma/import', {
-    figma_url: payload.figma_url,
-    project_name: payload.project_name,
+    figma_url: payload.figma_url.trim(),
+    project_name: payload.project_name?.trim() || undefined,
+    access_token: payload.access_token?.trim() || undefined,
   })
   return res.data
 }
 
-export async function getFigmaConnected(): Promise<{ connected: boolean }> {
+export async function getFigmaConnected(): Promise<FigmaConnectedStatus> {
   const res = await API.get('/figma/connected')
   return res.data
 }
@@ -190,4 +239,3 @@ export async function deleteFigmaProject(id: string): Promise<{ ok: boolean }> {
   const res = await API.delete(`/figma/projects/${id}`)
   return res.data
 }
-

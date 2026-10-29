@@ -186,7 +186,7 @@ def get_client() -> AsyncIOMotorClient | InMemoryClient:
 
     if _client is None:
         try:
-            _client = AsyncIOMotorClient(settings.mongodb_uri)
+            _client = AsyncIOMotorClient(settings.mongodb_uri, serverSelectionTimeoutMS=2500, connectTimeoutMS=2500)
             _db = _client[settings.database_name]
         except Exception:
             set_mongo_fallback_enabled(True)

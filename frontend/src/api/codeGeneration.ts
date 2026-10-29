@@ -114,7 +114,12 @@ export function createGenerationStream(
 
   const startStream = async () => {
     try {
-      const response = await fetch(`${API.defaults?.baseURL || ''}/api/codegen/generate-stream`, {
+      const apiBase = (API.defaults?.baseURL || '/api').replace(/\/+$/, '')
+      const url = apiBase.endsWith('/api')
+        ? `${apiBase}/codegen/generate-stream`
+        : `${apiBase}/api/codegen/generate-stream`
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -211,4 +216,3 @@ export function getFileLanguage(path: string): string {
   }
   return langMap[ext] || 'plaintext'
 }
-

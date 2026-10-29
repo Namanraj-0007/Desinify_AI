@@ -10,6 +10,7 @@ class FigmaTokenPayload(BaseModel):
 class FigmaImportPayload(BaseModel):
     figma_url: str
     project_name: Optional[str] = None
+    access_token: Optional[str] = None
 
 
 class NodeRef(BaseModel):
@@ -140,4 +141,3 @@ class ImageRenderPayload(BaseModel):
 
 class ImageRenderResponse(BaseModel):
     images: Dict[str, str]  # node_id -> image_url
-

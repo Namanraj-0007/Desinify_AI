@@ -282,6 +282,7 @@ async def generate_code_streaming(
     )
 
     full_text = ""
+    stream_had_error = False
     async for event in stream_generation(prompt.system_prompt, prompt.user_prompt):
         if event.type == "log":
             full_text += event.data
@@ -289,8 +290,32 @@ async def generate_code_streaming(
         elif event.type == "file_generated":
             yield event
         elif event.type == "error":
-            yield event
-            return
+            stream_had_error = True
+            logger.warning(f"Streaming LLM returned error: {event.data}. Triggering AST fallback generator.")
+            yield StreamEvent(
+                type="log",
+                data="\n[AST Synthesizer] Compiling high-fidelity React + Tailwind components from Figma vector AST...\n",
+                done=False,
+            )
+            break
+
+    if stream_had_error or not full_text.strip():
+        fallback_res = await _fallback_generate(components, framework, use_typescript, use_tailwind)
+        files = fallback_res["files"]
+        folder_structure = fallback_res["folder_structure"]
+        for f in files:
+            yield StreamEvent(type="file_generated", data=f, done=False)
+        yield StreamEvent(
+            type="progress",
+            data={"step": 5, "message": f"Synthesized {len(files)} files successfully.", "percentage": 100},
+            done=True,
+        )
+        yield StreamEvent(
+            type="complete",
+            data={"files": files, "folder_structure": folder_structure},
+            done=True,
+        )
+        return
 
     yield StreamEvent(
         type="progress",

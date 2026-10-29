@@ -6,6 +6,9 @@ type AuthContextValue = {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   signup: (name: string, email: string, password: string) => Promise<void>
+  verifyOtpLogin: (email: string, otp: string) => Promise<void>
+  socialLogin: (provider: 'google' | 'discord', email?: string, name?: string) => Promise<void>
+  setSessionToken: (token: string) => void
   logout: () => void
 }
 
@@ -68,6 +71,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       token,
       loading,
+      setSessionToken(newToken: string) {
+        localStorage.setItem('access_token', newToken)
+        localStorage.setItem('token', newToken)
+        setToken(newToken)
+      },
       async signup(name, email, password) {
         const res = await API.post('/auth/signup', { name, email, password })
 
@@ -88,11 +96,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setToken(newToken)
         }
       },
+      async verifyOtpLogin(email, otp) {
+        const res = await API.post('/auth/otp/verify', { email, otp })
+
+        if (res.data?.access_token) {
+          const newToken = res.data.access_token
+          localStorage.setItem('access_token', newToken)
+          localStorage.setItem('token', newToken)
+          setToken(newToken)
+        }
+      },
+      async socialLogin(provider, email, name) {
+        const fallbackEmail =
+          email ||
+          (provider === 'google'
+            ? 'creator.google@desinify.ai'
+            : 'creator.discord@desinify.ai')
+        const fallbackName =
+          name || (provider === 'google' ? 'Google Creator' : 'Discord Member')
+
+        const res = await API.post('/auth/social-login', {
+          provider,
+          email: fallbackEmail,
+          name: fallbackName,
+        })
+
+        if (res.data?.access_token) {
+          const newToken = res.data.access_token
+          localStorage.setItem('access_token', newToken)
+          localStorage.setItem('token', newToken)
+          setToken(newToken)
+        }
+      },
       logout() {
         localStorage.removeItem('access_token')
         localStorage.removeItem('token')
         setToken(null)
-      }
+      },
     }),
     [token, loading]
   )

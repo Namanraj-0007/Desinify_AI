@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
 
 # Load .env BEFORE importing settings so env_file-based settings are populated reliably.
 # NOTE: this project keeps the actual env at backend/.env
@@ -21,24 +22,16 @@ from app.config.settings import settings
 from app.routers.auth import router as auth_router
 from app.routers.projects import router as projects_router
 from app.routers.oauth_google import router as oauth_google_router
+from app.routers.oauth_discord import router as oauth_discord_router
 from app.routers.figma import router as figma_router
 from app.routers.code_generation import router as code_generation_router
-
-
 
 from app.services.mongo_health import ping_mongo
 from app.services.mongo import set_mongo_fallback_enabled
 
 
-
-
-
 def create_app() -> FastAPI:
-
-
     app = FastAPI(title='Designify AI API', version='0.1.0')
-    # This application was designed by Namandip raj with love ❤️
-
 
     # CORS: robust origin list supporting localhost on any port
     cors = (settings.cors_origins or '*').strip()
@@ -65,10 +58,6 @@ def create_app() -> FastAPI:
         allow_headers=['*'],
     )
 
-
-
-
-
     @app.on_event('startup')
     async def startup_verify_config_and_mongo():
         print('[startup] Initializing app in deployment-safe mode')
@@ -87,7 +76,7 @@ def create_app() -> FastAPI:
             print(f"[startup] config logging skipped: {exc}")
 
         try:
-            mongo_err = await ping_mongo(timeout_s=5.0)
+            mongo_err = await ping_mongo(timeout_s=2.5)
             if mongo_err == "ok":
                 print(f"[startup] MongoDB connected OK (db={settings.database_name})")
             else:
@@ -97,19 +86,12 @@ def create_app() -> FastAPI:
             set_mongo_fallback_enabled(True)
             print(f"[startup] MongoDB check skipped due to error: {exc}")
 
-
-
-
-
     app.include_router(auth_router, prefix=settings.api_prefix)
     app.include_router(projects_router, prefix=settings.api_prefix)
     app.include_router(oauth_google_router, prefix=settings.api_prefix)
+    app.include_router(oauth_discord_router, prefix=settings.api_prefix)
     app.include_router(figma_router, prefix=settings.api_prefix)
     app.include_router(code_generation_router, prefix=settings.api_prefix)
-
-
-
-
 
     @app.middleware("http")
     async def log_requests(request, call_next):
@@ -119,6 +101,18 @@ def create_app() -> FastAPI:
             pass
         response = await call_next(request)
         return response
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        errors = exc.errors()
+        first_error = errors[0] if errors else {}
+        msg = first_error.get('msg', 'Validation error')
+        if msg.startswith('Value error, '):
+            msg = msg[len('Value error, '):]
+        return JSONResponse(
+            status_code=400,
+            content={'detail': msg},
+        )
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):

@@ -127,7 +127,7 @@ const endpoints = [
     response: `{
   "status": "healthy",
   "version": "1.0.0",
-  "uptime": "99.9%",
+  "engine": "Gemini 2.5 Flash",
   "services": {
     "database": "connected",
     "ai": "operational",

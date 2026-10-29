@@ -4,6 +4,7 @@ from typing import Any, Dict
 from pathlib import Path
 from dotenv import load_dotenv
 
+from pydantic import Field, AliasChoices
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -42,9 +43,18 @@ class Settings(BaseSettings):
     api_prefix: str = '/api'
 
     # Google OAuth
-    google_oauth_client_id: str = ''
-    google_oauth_client_secret: str = ''
-    google_oauth_redirect_uri: str = ''
+    google_oauth_client_id: str = Field(
+        default='',
+        validation_alias=AliasChoices('google_oauth_client_id', 'google_client_id')
+    )
+    google_oauth_client_secret: str = Field(
+        default='',
+        validation_alias=AliasChoices('google_oauth_client_secret', 'google_client_secret')
+    )
+    google_oauth_redirect_uri: str = Field(
+        default='http://localhost:5173/auth/google/callback',
+        validation_alias=AliasChoices('google_oauth_redirect_uri', 'google_redirect_uri')
+    )
 
     # Defaults correct for Google OAuth; safe to override via env
     google_oauth_scope: str = 'openid email profile'
@@ -52,11 +62,32 @@ class Settings(BaseSettings):
     google_oauth_token_url: str = 'https://oauth2.googleapis.com/token'
     google_oauth_userinfo_url: str = 'https://www.googleapis.com/oauth2/v2/userinfo'
 
+    # Discord OAuth
+    discord_client_id: str = Field(
+        default='',
+        validation_alias=AliasChoices('discord_client_id', 'discord_oauth_client_id')
+    )
+    discord_client_secret: str = Field(
+        default='',
+        validation_alias=AliasChoices('discord_client_secret', 'discord_oauth_client_secret')
+    )
+    discord_redirect_uri: str = Field(
+        default='http://localhost:5173/auth/discord/callback',
+        validation_alias=AliasChoices('discord_redirect_uri', 'discord_oauth_redirect_uri')
+    )
+    discord_scope: str = 'identify email'
+    discord_authorize_url: str = 'https://discord.com/api/oauth2/authorize'
+    discord_token_url: str = 'https://discord.com/api/oauth2/token'
+    discord_userinfo_url: str = 'https://discord.com/api/users/@me'
+
     # AI / LLM Provider
     gemini_api_key: str = ''
     gemini_model: str = 'gemini-2.0-flash-exp'
     openai_api_key: str = ''
     openai_model: str = 'gpt-4o'
+
+    # Figma Integration
+    figma_access_token: str = ''
 
     model_config = SettingsConfigDict(
         # Allow environment variables even if .env isn't loadable in some runners.
@@ -84,8 +115,10 @@ class Settings(BaseSettings):
             'mongodb_uri',
             'jwt_secret',
             'google_oauth_client_secret',
+            'discord_client_secret',
             'gemini_api_key',
             'openai_api_key',
+            'figma_access_token',
         }
 
         for k in list(raw.keys()):
@@ -115,10 +148,15 @@ class Settings(BaseSettings):
             'GOOGLE_CLIENT_ID',
             'GOOGLE_CLIENT_SECRET',
             'GOOGLE_REDIRECT_URI',
+            'DISCORD_CLIENT_ID',
+            'DISCORD_CLIENT_SECRET',
+            'DISCORD_REDIRECT_URI',
             'GEMINI_API_KEY',
             'GEMINI_MODEL',
             'OPENAI_API_KEY',
             'OPENAI_MODEL',
+            'FIGMA_ACCESS_TOKEN',
+            'FIGMA_API_KEY',
         ]
 
         return {k: os.environ.get(k, '') for k in keys}
@@ -126,4 +164,3 @@ class Settings(BaseSettings):
 
 # Instantiate once at import time.
 settings = Settings()
-

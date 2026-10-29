@@ -11,7 +11,7 @@
 
 /*
  * Designify AI - Designed by Namandip raj with ❤️
- * https://github.com/Namanraj-0007
+ * Decent Theme: Deep Cosmic Slate & Sapphire Aurora
  */
 
 @tailwind base;
@@ -20,26 +20,40 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 5.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 5.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 252 87% 65%;
+    /* Deep Cosmic Slate (#090b14) - Decent, luxurious, eye-friendly */
+    --background: 228 35% 6%;
+    --foreground: 210 40% 98%;
+
+    /* Glass card surface (#0f1424) */
+    --card: 228 28% 9.5%;
+    --card-foreground: 210 40% 98%;
+    --popover: 228 28% 9.5%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Electric Iris & Royal Sapphire (#6366f1) */
+    --primary: 243 75% 62%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+
+    /* Secondary subtle slate */
+    --secondary: 228 20% 15%;
+    --secondary-foreground: 210 40% 96%;
+
+    /* Muted text & elements */
+    --muted: 228 20% 15%;
+    --muted-foreground: 224 16% 68%;
+
+    /* Accent cyan-indigo glow */
+    --accent: 228 22% 16%;
+    --accent-foreground: 210 40% 98%;
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 252 87% 65%;
-    --radius: 0.75rem;
+
+    /* Refined thin borders */
+    --border: 228 20% 17%;
+    --input: 228 20% 17%;
+    --ring: 199 89% 52%;
+    --radius: 0.85rem;
   }
 
   * {
@@ -55,43 +69,71 @@
     font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv02', 'cv03';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: #080a12;
   }
 
   ::selection {
-    background: hsl(252 87% 65% / 0.3);
-    color: hsl(0 0% 98%);
+    background: rgba(99, 102, 241, 0.35);
+    color: #ffffff;
   }
 }
 
 @layer utilities {
+  /* Crisp, decent metallic headline gradient (white -> iris -> soft cyan) */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-cyan-300 to-fuchsia-300;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-cyan-300;
+  }
+
+  .text-gradient-cyan {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-300;
   }
 
   .text-gradient-subtle {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-100 via-slate-300 to-slate-200;
   }
 
+  /* Decent dark glassmorphism */
   .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    background: rgba(15, 20, 36, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .glass-hover {
-    @apply hover:bg-white/[0.08] transition-colors duration-300;
+    @apply hover:bg-white/[0.06] hover:border-white/15 transition-all duration-300;
   }
 
+  /* Atmospheric volumetric glows */
   .glow {
-    box-shadow: 0 0 40px hsl(252 87% 65% / 0.15), 0 0 80px hsl(252 87% 65% / 0.05);
+    box-shadow: 0 0 50px rgba(99, 102, 241, 0.18), 0 0 100px rgba(6, 182, 212, 0.08);
   }
 
   .glow-sm {
-    box-shadow: 0 0 20px hsl(252 87% 65% / 0.1);
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.15);
   }
 
+  .glow-cyan {
+    box-shadow: 0 0 35px rgba(34, 211, 238, 0.25);
+  }
+
+  /* Top Atmospheric Hero Spotlight Cone */
+  .hero-spotlight {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1000px;
+    height: 500px;
+    background: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(99, 102, 241, 0.22), rgba(6, 182, 212, 0.12), transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Elegant thin iridescent gradient border */
   .gradient-border {
     position: relative;
     border-radius: inherit;
-    overflow: hidden;
   }
 
   .gradient-border::before {
@@ -100,7 +142,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, hsl(252 87% 65% / 0.5), hsl(187 87% 55% / 0.5), hsl(340 87% 65% / 0.5));
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(34, 211, 238, 0.4), rgba(168, 85, 247, 0.2));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -125,9 +167,13 @@
     backface-visibility: hidden;
   }
 
+  /* Cyber & Coordinate Grid Pattern */
   .grid-pattern {
-    background-image: radial-gradient(circle, hsl(240 5% 15% / 0.3) 1px, transparent 1px);
-    background-size: 24px 24px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 25%, #000 60%, transparent 100%);
   }
 
   /* Custom scrollbar */
@@ -137,55 +183,34 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: #080a12;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(240 3.7% 20%);
+    background: rgba(99, 102, 241, 0.25);
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(240 3.7% 30%);
+    background: rgba(99, 102, 241, 0.45);
   }
 }
 
-/* Aurora background animation */
-@keyframes aurora-move {
-  0% { transform: translate(0%, 0%) rotate(0deg); }
-  25% { transform: translate(5%, -5%) rotate(2deg); }
-  50% { transform: translate(-3%, 3%) rotate(-1deg); }
-  75% { transform: translate(2%, 2%) rotate(1deg); }
-  100% { transform: translate(0%, 0%) rotate(0deg); }
+/* Atmospheric Aurora Animation */
+@keyframes aurora-flow {
+  0% { transform: translate(0%, 0%) scale(1); }
+  33% { transform: translate(3%, -3%) scale(1.05); }
+  66% { transform: translate(-3%, 2%) scale(0.97); }
+  100% { transform: translate(0%, 0%) scale(1); }
 }
 
-.aurora-bg {
-  position: relative;
-  overflow: hidden;
-}
-
-.aurora-bg::before {
-  content: '';
+.aurora-mesh {
   position: absolute;
-  inset: -50%;
+  inset: -30%;
   background:
-    radial-gradient(ellipse at 20% 50%, hsl(252 87% 65% / 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 60% 20%, hsl(187 87% 55% / 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, hsl(340 87% 65% / 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 40% 60%, hsl(220 87% 55% / 0.1) 0%, transparent 50%);
-  animation: aurora-move 20s ease-in-out infinite;
+    radial-gradient(ellipse at 25% 35%, rgba(99, 102, 241, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 25%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 55%);
+  animation: aurora-flow 25s ease-in-out infinite;
   pointer-events: none;
 }
-
-/* Shimmer gradient animation */
-.shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    hsl(240 3.7% 20% / 0.5) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
-}
-

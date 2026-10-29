@@ -1,9 +1,10 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import Layout from './components/layout/Layout'
 import DashboardPage from './pages/DashboardPage'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
+import OAuthCallbackPage from './pages/OAuthCallbackPage'
 import FigmaProjectDetailPage from './pages/FigmaProjectDetailPage'
 import CodeGenerationPage from './pages/CodeGenerationPage'
 import AboutPage from './pages/AboutPage'
@@ -32,8 +33,17 @@ export default function App() {
             <Route path="/api" element={<ApiReferencePage />} />
             <Route path="/changelog" element={<ChangelogPage />} />
             <Route path="/status" element={<StatusPage />} />
-            <Route path="/auth" element={<AuthPage />} />
 
+            {/* Authentication Routes */}
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/login" element={<AuthPage defaultMode="login" />} />
+            <Route path="/signup" element={<AuthPage defaultMode="signup" />} />
+
+            {/* OAuth Callbacks for Google and Discord */}
+            <Route path="/auth/google/callback" element={<OAuthCallbackPage provider="google" />} />
+            <Route path="/auth/discord/callback" element={<OAuthCallbackPage provider="discord" />} />
+
+            {/* Protected Routes */}
             <Route
               path="/dashboard"
               element={
