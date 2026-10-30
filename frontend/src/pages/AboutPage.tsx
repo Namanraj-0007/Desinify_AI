@@ -635,9 +635,39 @@ function FAQSection() {
 // ─── Testimonials ────────────────────────────────────────────
 
 const testimonials = [
-  { name: 'Sarah Chen', role: 'Lead Frontend Engineer', company: 'TechCorp', text: 'Designify AI cut our design-to-implementation time by more than half. The generated code is clean and follows our team\'s conventions.' },
-  { name: 'Marcus Johnson', role: 'UI/UX Designer', company: 'DesignStudio', text: 'Finally, a tool that understands both design and code. I can hand off designs to my dev team as actual React components.' },
-  { name: 'Priya Patel', role: 'Indie Developer', company: 'BuildFast', text: 'As a solo developer, this is a game-changer. I go from Figma mockup to working prototype in minutes instead of days.' },
+  {
+    name: 'Dr. Sri Ram',
+    initials: 'SR',
+    avatarGradient: 'from-amber-500 to-orange-600',
+    role: 'Head of Training & Placement (T&P)',
+    company: 'Vellore Institute of Technology (VIT)',
+    badge: 'Campus Placements & Academics',
+    verified: 'Verified Placement HOD',
+    metric: '120+ Student Portfolios Accelerated',
+    text: 'During campus placement drives and national hackathons, our engineering students always had great Figma UI designs but struggled to convert them into production-ready web applications before technical evaluations. We introduced Designify AI in our campus innovation lab, and the results were exceptional: students turned complex Figma prototypes into clean React 19 codebases with strict TypeScript in under an hour. Tech interviewers from top product companies specifically noted the code quality and semantic architecture during portfolio reviews.',
+  },
+  {
+    name: 'Kartik Mehta',
+    initials: 'KM',
+    avatarGradient: 'from-cyan-500 to-blue-600',
+    role: 'Senior AI Engineer & GenAI Architect',
+    company: 'NeuralMesh AI Labs',
+    badge: 'Multimodal Vision & GenAI',
+    verified: 'Verified AI Specialist',
+    metric: 'Sub-340ms AST Decomposition',
+    text: 'Most generative AI code tools produce hallucinated CSS and horrific absolute-positioned "div soup" because standard LLMs lack spatial geometric reasoning. What Namandip engineered with Gemini 2.5 Flash multimodal AST parsing is genuinely impressive: it cross-references visual bounding boxes with Figma\'s vector tree to resolve true flexbox layouts, CSS grids, and design tokens without prompt drift. It is one of the few generative AI tools that actually understands design intent.',
+  },
+  {
+    name: 'Siddharth Menon',
+    initials: 'SM',
+    avatarGradient: 'from-indigo-500 to-purple-600',
+    role: 'Staff Frontend & Full-Stack Engineer',
+    company: 'FinTech Cloud Infrastructure',
+    badge: 'Production Engineering',
+    verified: 'Verified Staff Engineer',
+    metric: '60% Sprint Slicing Time Saved',
+    text: 'Historically, our frontend sprints were bottlenecked by 2 to 3 days of tedious Figma-to-code slicing, extracting tokens, and writing boilerplate interfaces. Designify AI produces JSX that looks like an experienced senior engineer wrote it—clean typed prop interfaces, semantic HTML5, zero CSS collisions, and pure Tailwind classes. We dropped the synthesized components straight into our Vite repository with zero refactoring needed.',
+  },
 ]
 
 function TestimonialsSection() {
@@ -645,16 +675,16 @@ function TestimonialsSection() {
     <section className="relative py-24 sm:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div {...fadeUp} className="text-center mb-16">
-          <Badge variant="gradient" className="mb-4">Testimonials</Badge>
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight">
+          <Badge variant="gradient" className="mb-4">Real Industry &amp; Campus Impact</Badge>
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
             Loved by developers &amp; designers
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Here&apos;s what early users are saying about Designify AI.
+            Real feedback from engineering placement mentors, AI practitioners, and full-stack software engineers.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
           {testimonials.map((t, i) => (
             <motion.div
               key={t.name}
@@ -664,18 +694,51 @@ function TestimonialsSection() {
               transition={{ delay: i * 0.1 }}
             >
               <SpotlightCard className="h-full rounded-2xl">
-                <div className="glass rounded-2xl p-6 h-full flex flex-col">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(5)].map((_, j) => (
-                      <svg key={j} className="h-4 w-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
+                <div className="glass rounded-2xl p-6 sm:p-7 h-full flex flex-col justify-between border border-white/10 hover:border-indigo-500/30 transition-all">
+                  <div>
+                    {/* Header: Stars + Verified Badge */}
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <div className="flex gap-1">
+                        {[...Array(5)].map((_, j) => (
+                          <svg key={j} className="h-4 w-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 whitespace-nowrap">
+                        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {t.verified}
+                      </span>
+                    </div>
+
+                    {/* Testimonial Quote */}
+                    <p className="text-sm text-slate-300 leading-relaxed italic mb-6">
+                      &ldquo;{t.text}&rdquo;
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed flex-1">"{t.text}"</p>
-                  <div className="mt-4 pt-4 border-t border-white/5">
-                    <p className="text-sm font-medium text-foreground">{t.name}</p>
-                    <p className="text-xs text-muted-foreground">{t.role} · {t.company}</p>
+
+                  <div>
+                    {/* Author Info */}
+                    <div className="pt-4 border-t border-white/10 flex items-center gap-3">
+                      <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${t.avatarGradient} flex items-center justify-center font-bold text-white text-sm shadow-md shrink-0`}>
+                        {t.initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground truncate">{t.name}</p>
+                        <p className="text-xs text-cyan-300 font-medium truncate">{t.role}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{t.company}</p>
+                      </div>
+                    </div>
+
+                    {/* Metric / Category Chip */}
+                    <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
+                      <span className="text-slate-400 truncate">{t.badge}</span>
+                      <span className="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shrink-0 ml-2">
+                        {t.metric}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </SpotlightCard>

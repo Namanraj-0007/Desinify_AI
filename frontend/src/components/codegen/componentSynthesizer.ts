@@ -60,8 +60,12 @@ export function extractJsxFromFunction(code: string): string {
  */
 function extractPropDefaults(code: string): Record<string, any> {
   const defaults: Record<string, any> = {
-    title: 'Designify AI Component',
-    amount: '$148,290',
+    title: 'Components Synthesized',
+    amount: '1,420 TSX',
+    synthesizedCount: '1,420 TSX',
+    fidelity: '99.4% Fidelity',
+    astLatency: '~340ms',
+    tokensExtracted: 142,
     change: '+28.4%',
     isPositive: true,
   }

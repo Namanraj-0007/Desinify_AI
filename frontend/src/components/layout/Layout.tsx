@@ -5,17 +5,17 @@ import Footer from './Footer'
 
 export default function Layout() {
   const location = useLocation()
+  const isLanding = location.pathname === '/'
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 pt-16 sm:pt-20">
+      <main className={`flex-1 ${isLanding ? '' : 'pt-16 sm:pt-20'}`}>
         <AnimatePresence mode="wait">
           <Outlet key={location.pathname} />
         </AnimatePresence>
       </main>
-      <Footer />
+      {!isLanding && <Footer />}
     </div>
   )
 }
-

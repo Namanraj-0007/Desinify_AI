@@ -53,7 +53,7 @@ async def login_user(email: str, password: str) -> str:
     if not user.get('hashed_password'):
         provider_name = user.get('provider', 'social login').title()
         raise ValueError(
-            f'This account was created via {provider_name}. Please use the "Continue with {provider_name}" button above.'
+            f'This account was created via {provider_name}. Please sign in with {provider_name}.'
         )
 
     if not verify_password(password, user['hashed_password']):

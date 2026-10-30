@@ -15,25 +15,27 @@ interface PresetItem {
 const PRESETS: PresetItem[] = [
   {
     id: 'analytics',
-    name: 'Analytics Card',
-    icon: '📊',
+    name: 'Synthesis Telemetry',
+    icon: '⚡',
     tokens: { color: '#6366f1', font: 'Inter 600', radius: '16px' },
     visual: (
       <div className="p-5 rounded-2xl bg-[#0f1424] border border-indigo-500/30 shadow-2xl relative overflow-hidden group">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            <div className="h-9 w-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-cyan-400">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div>
-              <p className="text-xs text-slate-400 font-medium">Monthly ARR</p>
-              <h4 className="text-lg font-bold text-white">$142,850</h4>
+              <p className="text-xs text-slate-400 font-medium">Components Synthesized</p>
+              <h4 className="text-lg font-bold text-white flex items-center gap-1.5">
+                1,420 <span className="text-[11px] font-mono font-normal text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">TSX</span>
+              </h4>
             </div>
           </div>
           <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
-            +24.8%
+            99.4% Fidelity
           </span>
         </div>
         {/* Mock Sparkline Graph */}
@@ -48,29 +50,36 @@ const PRESETS: PresetItem[] = [
           ))}
         </div>
         <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/5 pt-2">
-          <span>Target: $150k</span>
-          <span className="text-cyan-400 font-mono">On Track</span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            AST Latency: ~340ms
+          </span>
+          <span className="text-cyan-400 font-mono">142 Tokens Parsed</span>
         </div>
       </div>
     ),
-    code: `// Generated: AnalyticsCard.tsx
+    code: `// Generated: SynthesisTelemetryCard.tsx
 import React from 'react';
 
-export function AnalyticsCard() {
+export function SynthesisTelemetryCard() {
   return (
     <div className="p-5 rounded-2xl bg-slate-900/80 border border-indigo-500/30 backdrop-blur-xl shadow-2xl">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-xs text-slate-400 font-medium">Monthly ARR</p>
-          <h4 className="text-lg font-bold text-white">$142,850</h4>
+          <p className="text-xs text-slate-400 font-medium">Components Synthesized</p>
+          <h4 className="text-lg font-bold text-white">1,420 TSX</h4>
         </div>
         <span className="px-2 py-0.5 text-xs text-emerald-400 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-          +24.8%
+          99.4% Fidelity
         </span>
       </div>
       <div className="h-14 flex items-end gap-1.5">
-        {/* Dynamic Chart Bars */}
+        {/* Dynamic Throughput Bars */}
         <div className="flex-1 bg-gradient-to-t from-indigo-600 to-cyan-400 rounded-t h-full" />
+      </div>
+      <div className="mt-3 flex justify-between text-[11px] text-slate-400 font-mono">
+        <span>AST Latency: ~340ms</span>
+        <span className="text-cyan-400">142 Tokens</span>
       </div>
     </div>
   );

@@ -1,0 +1,236 @@
+/**
+ * constants.ts
+ * Configurable parameters, timings, colors, layer spacing, and content
+ * for the Designify AI Scroll-Driven 3D Landing Page.
+ */
+
+// ============================================================================
+// 1. SCROLL STORYBOARD STAGE TIMINGS & PAGE CONFIG
+// ============================================================================
+export const SCROLL_CONFIG = {
+  storyPages: 6.0,         // Number of viewports dedicated to the 3D storyboard
+  postStoryPages: 7.5,     // Number of viewports for post-story sections (preview, features, how-it-works, code, testimonials, arch, footer)
+  totalPages: 13.5,        // Total pages configured in Drei ScrollControls
+  damping: 0.22,           // Damping factor for inertia and smooth scrolling
+}
+
+export const STAGE_TIMINGS = {
+  STAGE_1_HERO: { start: 0.0, end: 0.15 },       // Floating flat Figma frame
+  STAGE_2_EXPLODE: { start: 0.15, end: 0.35 },    // Exploded view along Z axis + rotation
+  STAGE_3_LABELS: { start: 0.35, end: 0.55 },     // Glowing connectors & layout labels
+  STAGE_4_STREAM: { start: 0.55, end: 0.75 },     // Layers flow into code panel, code streams
+  STAGE_5_ASSEMBLE: { start: 0.75, end: 0.90 },   // Code compiles, snaps into clean UI on right
+  STAGE_6_PULLBACK: { start: 0.90, end: 1.00 },   // Camera pulls back: before/after + CTA
+} as const
+
+// ============================================================================
+// 2. DESIGN THEME & COLOR PALETTE
+// ============================================================================
+export const PALETTE = {
+  // Backgrounds & Surface
+  bgDark: '#070912',
+  bgCard: '#0d1222',
+  bgCardHover: '#131930',
+  frameBase: '#0b0f1d',
+  frameBorder: 'rgba(99, 102, 241, 0.25)',
+
+  // Primary & Accent Accents
+  accentIndigo: '#6366f1',
+  accentCyan: '#06b6d4',
+  accentViolet: '#8b5cf6',
+  accentEmerald: '#10b981',
+  accentRose: '#f43f5e',
+  accentAmber: '#f59e0b',
+
+  // Glowing Emissive Colors
+  glowCyan: '#22d3ee',
+  glowViolet: '#a78bfa',
+  glowEmerald: '#34d399',
+
+  // Text
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  textMuted: '#64748b',
+}
+
+// ============================================================================
+// 3. 3D FIGMA FRAME DIMENSIONS & LAYER SPACING
+// ============================================================================
+export const FRAME_CONFIG = {
+  width: 3.6,
+  height: 4.8,
+  depth: 0.04,
+  cornerRadius: 0.16,
+
+  // Layer explosion distances along Z axis in Stage 2
+  maxZSeparation: 0.75,          // Max Z offset between adjacent layers
+  explodeTiltX: -0.22,           // Tilt on X axis during exploded view (radians)
+  explodeTiltY: 0.48,            // Tilt on Y axis during exploded view (radians)
+  explodeTiltZ: 0.06,            // Tilt on Z axis for realistic 3D perspective
+
+  // Camera Settings
+  cameraFov: 42,
+  cameraInitialZ: 6.8,
+  cameraPulledBackZ: 8.6,
+}
+
+// ============================================================================
+// 4. FIGMA FRAME LAYER DEFINITIONS
+// ============================================================================
+export interface LayerData {
+  id: string
+  name: string
+  label: string
+  tag: string
+  zBase: number
+  zExplode: number
+  color: string
+  borderColor: string
+  glowColor: string
+}
+
+export const FRAME_LAYERS: LayerData[] = [
+  {
+    id: 'layer-canvas',
+    name: 'Canvas Frame',
+    label: 'Artboard: Frame 1',
+    tag: 'container',
+    zBase: 0.0,
+    zExplode: 0.0,
+    color: '#0c1020',
+    borderColor: 'rgba(99, 102, 241, 0.3)',
+    glowColor: '#6366f1',
+  },
+  {
+    id: 'layer-nav',
+    name: 'Navigation Bar',
+    label: 'flex row • space-between',
+    tag: 'header',
+    zBase: 0.02,
+    zExplode: 0.45,
+    color: '#131932',
+    borderColor: 'rgba(34, 211, 238, 0.4)',
+    glowColor: '#22d3ee',
+  },
+  {
+    id: 'layer-card-stats',
+    name: 'Telemetry Card',
+    label: 'grid-cols-2 • p-4',
+    tag: 'component',
+    zBase: 0.04,
+    zExplode: 0.95,
+    color: '#151c38',
+    borderColor: 'rgba(99, 102, 241, 0.45)',
+    glowColor: '#818cf8',
+  },
+  {
+    id: 'layer-card-chart',
+    name: 'Sparkline Vector',
+    label: 'svg • path • stroke',
+    tag: 'vector',
+    zBase: 0.06,
+    zExplode: 1.45,
+    color: '#182042',
+    borderColor: 'rgba(139, 92, 246, 0.45)',
+    glowColor: '#a78bfa',
+  },
+  {
+    id: 'layer-cta',
+    name: 'Primary Button',
+    label: 'button • hover:scale-105',
+    tag: 'interactive',
+    zBase: 0.08,
+    zExplode: 1.95,
+    color: '#252060',
+    borderColor: 'rgba(244, 63, 94, 0.4)',
+    glowColor: '#f43f5e',
+  },
+  {
+    id: 'layer-typography',
+    name: 'Text Hierarchy',
+    label: 'font-display • text-xl',
+    tag: 'typography',
+    zBase: 0.1,
+    zExplode: 2.35,
+    color: '#1e284a',
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    glowColor: '#34d399',
+  },
+]
+
+// ============================================================================
+// 5. STREAMING REACT CODE SNIPPET (Stage 4 & 5)
+// ============================================================================
+export const STREAMING_CODE_LINES = [
+  `// ⚡ Generated by Designify AI • Gemini 2.5 AST`,
+  `import React, { useState } from 'react';`,
+  `import { motion } from 'framer-motion';`,
+  ``,
+  `export interface HeroMetricCardProps {`,
+  `  title?: string;`,
+  `  activeCount?: number;`,
+  `  accuracy?: string;`,
+  `}`,
+  ``,
+  `export function HeroMetricCard({`,
+  `  title = "Neural Synthesis",`,
+  `  activeCount = 1420,`,
+  `  accuracy = "99.4% TSX",`,
+  `}: HeroMetricCardProps) {`,
+  `  const [activeTab, setActiveTab] = useState<'AST' | 'TSX'>('TSX');`,
+  ``,
+  `  return (`,
+  `    <div className="relative p-6 rounded-3xl bg-slate-900/90 border border-indigo-500/30 backdrop-blur-2xl shadow-2xl">`,
+  `      <div className="flex items-center justify-between mb-4">`,
+  `        <div>`,
+  `          <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">{title}</span>`,
+  `          <h3 className="text-2xl font-bold text-white mt-1 font-display">{activeCount} Components</h3>`,
+  `        </div>`,
+  `        <span className="px-2.5 py-1 text-xs font-mono font-semibold text-emerald-400 bg-emerald-500/10 rounded-full border border-emerald-500/20">`,
+  `          {accuracy}`,
+  `        </span>`,
+  `      </div>`,
+  `      {/* Interactive AST Visualizer */}`,
+  `      <div className="h-16 flex items-end gap-1.5 pt-2">`,
+  `        {[40, 65, 45, 80, 55, 95, 75, 100].map((h, i) => (`,
+  `          <div key={i} className="flex-1 bg-gradient-to-t from-indigo-600 to-cyan-400 rounded-t" style={{ height: \`\${h}%\` }} />`,
+  `        ))}`,
+  `      </div>`,
+  `    </div>`,
+  `  );`,
+  `}`,
+]
+
+// ============================================================================
+// 6. ARCHITECTURE TECH STACK CARDS (Post-Story Section)
+// ============================================================================
+export const TECH_STACK = [
+  {
+    name: 'React 19 & Three.js',
+    role: 'Frontend & 3D Spatial Canvas',
+    desc: 'Concurrent React renderer with @react-three/fiber, tailwindcss v3, and framer-motion for micro-interactions.',
+    badge: 'UI Engine',
+    color: '#22d3ee',
+  },
+  {
+    name: 'FastAPI Microservice',
+    role: 'High-Throughput Compiler',
+    desc: 'Asynchronous Python server with Pydantic validation, streaming SSE generation, and token AST parsers.',
+    badge: 'Backend Core',
+    color: '#818cf8',
+  },
+  {
+    name: 'Google Gemini 2.5 Flash',
+    role: 'Multimodal Vision Layout Parser',
+    desc: 'Extracts spatial geometry, bounding boxes, typographic weights, and semantic design tokens from raw pixels or vector JSON.',
+    badge: 'AI Model',
+    color: '#a78bfa',
+  },
+  {
+    name: 'MongoDB Atlas & Auth',
+    role: 'Secure Persistence & Auth',
+    desc: 'Motor async MongoDB persistence with Google OAuth 2.0 authentication and high-performance JWT session management.',
+    badge: 'Cloud Data',
+    color: '#34d399',
+  },
+]

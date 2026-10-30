@@ -20,47 +20,52 @@ import { Button } from '../components/ui/Button'
 const QUICK_LAUNCHPAD = [
   {
     id: 'analytics',
-    title: 'Analytics Dashboard',
-    tag: 'KPI & Sparkline',
-    icon: '📊',
-    desc: 'Modular card with stat counters, trend badges, and dynamic SVG sparkline charts.',
+    title: 'Neural Synthesis Telemetry',
+    tag: 'AST & Metrics',
+    icon: '⚡',
+    desc: 'Modular telemetry card tracking synthesized components, AST latency, and design token extraction.',
     accent: 'from-indigo-500/20 to-cyan-500/20 border-indigo-500/30',
     files: [
       {
-        path: 'src/components/AnalyticsCard.tsx',
+        path: 'src/components/SynthesisTelemetryCard.tsx',
         content: `import React from 'react';
 
-export interface AnalyticsProps {
+export interface TelemetryProps {
   title?: string;
-  amount?: string;
-  change?: string;
-  isPositive?: boolean;
+  synthesizedCount?: string;
+  fidelity?: string;
+  astLatency?: string;
+  tokensExtracted?: number;
 }
 
-export function AnalyticsCard({
-  title = "Monthly Active Revenue",
-  amount = "$148,290",
-  change = "+28.4%",
-  isPositive = true,
-}: AnalyticsProps) {
+export function SynthesisTelemetryCard({
+  title = "Components Synthesized",
+  synthesizedCount = "1,420 TSX",
+  fidelity = "99.4% Fidelity",
+  astLatency = "~340ms",
+  tokensExtracted = 142,
+}: TelemetryProps) {
   return (
-    <div className="p-6 rounded-2xl bg-slate-900/90 border border-indigo-500/30 backdrop-blur-xl shadow-2xl">
+    <div className="p-6 rounded-3xl bg-slate-900/90 border border-indigo-500/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-xs font-medium text-slate-400">{title}</p>
-          <h3 className="text-2xl font-bold text-white mt-1 font-display">{amount}</h3>
+          <span className="text-[10px] font-mono text-cyan-400/80 uppercase tracking-wider block">
+            {title}
+          </span>
+          <h3 className="text-2xl font-bold text-white mt-1 font-display tracking-tight flex items-center gap-2">
+            {synthesizedCount}
+          </h3>
         </div>
-        <span className={\`px-2.5 py-1 text-xs font-mono font-semibold rounded-full border \${
-          isPositive 
-            ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
-            : 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-        }\`}>
-          {change}
+        <span className="px-2.5 py-1 text-xs font-mono font-semibold rounded-full border text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-sm flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          {fidelity}
         </span>
       </div>
+
+      {/* Synthesis Throughput Sparklines */}
       <div className="h-16 flex items-end gap-1.5 pt-2">
-        {[35, 60, 40, 75, 50, 95, 70, 100].map((h, i) => (
-          <div key={i} className="flex-1 bg-indigo-950/60 rounded-t h-full flex items-end overflow-hidden">
+        {[35, 60, 45, 80, 55, 95, 70, 100].map((h, i) => (
+          <div key={i} className="flex-1 bg-indigo-950/60 rounded-t h-full flex items-end overflow-hidden group/bar relative">
             <div 
               style={{ height: \`\${h}%\` }}
               className="w-full bg-gradient-to-t from-indigo-600 via-indigo-500 to-cyan-400 rounded-t transition-all hover:brightness-125 shadow-[0_0_8px_rgba(34,211,238,0.3)]"
@@ -68,9 +73,13 @@ export function AnalyticsCard({
           </div>
         ))}
       </div>
+
       <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400 font-mono">
-        <span>Target: $150k</span>
-        <span className="text-cyan-400 font-semibold">On Track</span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+          AST Latency: {astLatency}
+        </span>
+        <span className="text-cyan-400 font-semibold">{tokensExtracted} Tokens Parsed</span>
       </div>
     </div>
   );
@@ -79,13 +88,13 @@ export function AnalyticsCard({
       {
         path: 'src/App.tsx',
         content: `import React from 'react';
-import { AnalyticsCard } from './components/AnalyticsCard';
+import { SynthesisTelemetryCard } from './components/SynthesisTelemetryCard';
 
 export default function App() {
   return (
     <div className="min-h-screen bg-[#070912] text-white p-8 flex items-center justify-center">
       <div className="w-full max-w-md">
-        <AnalyticsCard />
+        <SynthesisTelemetryCard />
       </div>
     </div>
   );
@@ -94,7 +103,7 @@ export default function App() {
       {
         path: 'package.json',
         content: `{
-  "name": "desinify-analytics-app",
+  "name": "desinify-synthesis-telemetry",
   "version": "1.0.0",
   "dependencies": {
     "react": "^18.3.1",

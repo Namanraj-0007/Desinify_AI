@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0e1b" />
+      <stop offset="50%" stop-color="#11162b" />
+      <stop offset="100%" stop-color="#070912" />
+    </linearGradient>
+
+    <!-- Border Glow Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#6366f1" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0.9" />
+    </linearGradient>
+
+    <!-- Core Glyph Primary Gradient -->
+    <linearGradient id="glyphGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" />
+      <stop offset="45%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+
+    <!-- Inner Code Chevron Gradient -->
+    <linearGradient id="innerGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+
+    <!-- Neon Glow Filter -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#22d3ee" flood-opacity="0.65" />
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#6366f1" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Base Rounded Container -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="2" />
+
+  <!-- Background Cyber Grid Mesh Lines -->
+  <path d="M2 32 H62 M32 2 V62" stroke="#6366f1" stroke-width="0.5" stroke-opacity="0.18" stroke-dasharray="2 2" />
+
+  <!-- Main Futuristic Logo Glyph: Spatial "D" with Code Core & Synthesis Ray -->
+  <g filter="url(#neonGlow)">
+    <!-- Outer Spatial D Spine & Loop -->
+    <path
+      d="M17 15
+         C17 13.34 18.34 12 20 12
+         H31
+         C42.05 12 50 19.95 50 32
+         C50 44.05 42.05 52 31 52
+         H20
+         C18.34 52 17 50.66 17 49
+         Z
+         M24 19
+         V45
+         H30
+         C37.72 45 43 39.28 43 32
+         C43 24.72 37.72 19 30 19
+         Z"
+      fill="url(#glyphGrad)"
+    />
+
+    <!-- Inner Futuristic Synthesis Core: Glowing Code Bracket & Pulse Spark -->
+    <path
+      d="M27 25
+         L33 32
+         L27 39"
+      fill="none"
+      stroke="url(#innerGrad)"
+      stroke-width="3"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Glowing Quantum Energy Dot -->
+    <circle cx="38" cy="32" r="2.5" fill="#22d3ee" />
+  </g>
+</svg>
+

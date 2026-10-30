@@ -17,8 +17,11 @@ import ChangelogPage from './pages/ChangelogPage'
 import StatusPage from './pages/StatusPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { AuthProvider } from './context/AuthContext'
+import { useTabExperience } from './hooks/useTabTitle'
 
 export default function App() {
+  useTabExperience()
+
   return (
     <AuthProvider>
       <AnimatePresence mode="wait">

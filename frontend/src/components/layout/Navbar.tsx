@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../context/AuthContext'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/utils'
+import BrandLogo from '../ui/BrandLogo'
 
 const navItems = [
   { label: 'Features', href: '#features', external: true },
@@ -41,17 +42,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)] group-hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition-shadow">
-              <span className="text-sm font-bold text-white">D</span>
-            </div>
-            <span className="font-display font-semibold text-lg tracking-tight text-foreground hidden sm:block">
-              Designify <span className="text-gradient">AI</span>
-            </span>
-            <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/20">
-              by Namandip Raj
-            </span>
-          </Link>
+          <BrandLogo size={36} />
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
@@ -62,17 +53,12 @@ export default function Navbar() {
                   onClick={() => {
                     if (location.pathname === '/') {
                       const el = document.querySelector(item.href)
-                      el?.scrollIntoView({ behavior: 'smooth' })
+                      el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                     } else {
                       navigate('/' + item.href)
                     }
                   }}
-                  className={cn(
-                    'px-4 py-2 text-sm transition-colors rounded-lg cursor-pointer',
-                    location.pathname === '/'
-                      ? 'text-foreground bg-white/[0.08]'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.05]'
-                  )}
+                  className="px-4 py-2 text-sm text-slate-300 hover:text-foreground hover:bg-white/[0.08] transition-colors rounded-lg cursor-pointer"
                 >
                   {item.label}
                 </button>
@@ -161,12 +147,12 @@ export default function Navbar() {
                       setMobileOpen(false)
                       if (location.pathname === '/') {
                         const el = document.querySelector(item.href)
-                        el?.scrollIntoView({ behavior: 'smooth' })
+                        el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       } else {
                         navigate('/' + item.href)
                       }
                     }}
-                    className="block w-full text-left px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/[0.05] transition-colors"
+                    className="block w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:text-white rounded-lg hover:bg-white/[0.08] transition-colors"
                   >
                     {item.label}
                   </button>

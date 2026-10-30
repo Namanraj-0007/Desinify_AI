@@ -46,6 +46,7 @@ export const CodePreview: React.FC<Props> = ({ files, onRefresh, refreshing }) =
       const preferred = files.find(
         (f) =>
           f.path.includes('App.tsx') ||
+          f.path.includes('SynthesisTelemetry') ||
           f.path.includes('AnalyticsCard') ||
           f.path.includes('Pricing') ||
           f.path.endsWith('.tsx')
@@ -106,7 +107,14 @@ export const CodePreview: React.FC<Props> = ({ files, onRefresh, refreshing }) =
     if (!selectedFile) return 'generic'
     const name = selectedFile.path.toLowerCase()
     const content = selectedFile.content.toLowerCase()
-    if (name.includes('analytics') || content.includes('monthly active revenue') || content.includes('arr')) {
+    if (
+      name.includes('telemetry') ||
+      name.includes('analytics') ||
+      content.includes('synthesis') ||
+      content.includes('components synthesized') ||
+      content.includes('monthly active revenue') ||
+      content.includes('arr')
+    ) {
       return 'analytics'
     }
     if (name.includes('pricing') || content.includes('pro tier') || content.includes('license')) {
@@ -429,15 +437,17 @@ export const CodePreview: React.FC<Props> = ({ files, onRefresh, refreshing }) =
                       <div className="w-full max-w-md p-6 rounded-3xl bg-slate-900/90 border border-indigo-500/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
-                              Revenue Metric
+                            <span className="text-[10px] font-mono text-cyan-400/80 uppercase tracking-wider block">
+                              AI Synthesis Throughput
                             </span>
-                            <h3 className="text-2xl font-bold text-white mt-0.5 font-display">
-                              {analyticsRange === '7D' ? '$34,920' : analyticsRange === '30D' ? '$148,290' : '$421,800'}
+                            <h3 className="text-2xl font-bold text-white mt-0.5 font-display flex items-center gap-2">
+                              {analyticsRange === '7D' ? '385' : analyticsRange === '30D' ? '1,420' : '4,850'}{' '}
+                              <span className="text-sm font-normal text-slate-400 font-mono">Components</span>
                             </h3>
                           </div>
-                          <span className="px-2.5 py-1 text-xs font-mono font-semibold rounded-full border text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-sm flex items-center gap-1">
-                            <span>▲</span> +28.4%
+                          <span className="px-2.5 py-1 text-xs font-mono font-semibold rounded-full border text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-sm flex items-center gap-1.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            99.4% TSX
                           </span>
                         </div>
 
@@ -462,6 +472,7 @@ export const CodePreview: React.FC<Props> = ({ files, onRefresh, refreshing }) =
                         <div className="h-20 flex items-end gap-2 pt-2 pb-1">
                           {[35, 65, 45, 80, 55, 95, 70, 100].map((h, i) => {
                             const adjustedHeight = analyticsRange === '7D' ? Math.round(h * 0.7) : analyticsRange === '90D' ? Math.min(100, Math.round(h * 1.15)) : h
+                            const dailyAST = analyticsRange === '7D' ? Math.round(h * 0.6) : analyticsRange === '90D' ? Math.round(h * 2.2) : h
                             return (
                               <div
                                 key={i}
@@ -474,7 +485,7 @@ export const CodePreview: React.FC<Props> = ({ files, onRefresh, refreshing }) =
                                   className="w-full bg-gradient-to-t from-indigo-600 via-indigo-500 to-cyan-400 rounded-t group-hover/bar:brightness-125 transition-all shadow-[0_0_12px_rgba(34,211,238,0.4)]"
                                 />
                                 <div className="opacity-0 group-hover/bar:opacity-100 transition-opacity absolute -top-7 left-1/2 -translate-x-1/2 bg-black/80 px-1.5 py-0.5 rounded text-[9px] font-mono text-cyan-300 pointer-events-none whitespace-nowrap border border-cyan-500/30">
-                                  {adjustedHeight}%
+                                  {dailyAST} AST/day
                                 </div>
                               </div>
                             )
@@ -482,10 +493,12 @@ export const CodePreview: React.FC<Props> = ({ files, onRefresh, refreshing }) =
                         </div>
 
                         <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400 font-mono">
-                          <span>Target: $150k</span>
-                          <span className="text-cyan-400 font-semibold flex items-center gap-1">
+                          <span className="flex items-center gap-1.5">
                             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
-                            Live Telemetry Active
+                            AST Speed: ~320ms
+                          </span>
+                          <span className="text-cyan-400 font-semibold flex items-center gap-1">
+                            142 Design Tokens
                           </span>
                         </div>
                       </div>

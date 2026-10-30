@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import BrandLogo from '../ui/BrandLogo'
 
 const footerLinks = {
   Resources: [
@@ -41,14 +42,9 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand - spans 2 cols */}
           <div className="col-span-2 md:col-span-2 lg:col-span-1">
-            <Link to="/" className="flex items-center gap-2 group mb-4">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 flex items-center justify-center shadow-[0_0_20px_hsl(252_87%_65%/0.3)] group-hover:shadow-[0_0_30px_hsl(252_87%_65%/0.4)] transition-shadow duration-300">
-                <span className="text-sm font-bold text-white">D</span>
-              </div>
-              <span className="font-display font-semibold text-base">
-                Designify <span className="text-gradient">AI</span>
-              </span>
-            </Link>
+            <div className="mb-4">
+              <BrandLogo size={34} showBadge={false} />
+            </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               Convert UI screenshots into production-ready React components powered by AI. Ship faster with Designify AI.
             </p>
