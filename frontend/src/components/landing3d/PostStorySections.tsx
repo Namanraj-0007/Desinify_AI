@@ -7,9 +7,7 @@ import Footer from '../layout/Footer'
 import InteractiveStudioDeck from '../ui/InteractiveStudioDeck'
 import { TECH_STACK } from './constants'
 
-// ============================================================================
-// PRESET ARTBOARDS
-// ============================================================================
+// Preset Figma artboards for quick playground tests
 const SAMPLE_PRESETS = [
   {
     id: 'telemetry',
@@ -34,9 +32,7 @@ const SAMPLE_PRESETS = [
   },
 ]
 
-// ============================================================================
-// REAL INDUSTRY & CAMPUS ENDORSEMENTS
-// ============================================================================
+// Industry and campus endorsements
 const INDUSTRY_TESTIMONIALS = [
   {
     name: 'Dr. Sri Ram',
@@ -73,9 +69,7 @@ const INDUSTRY_TESTIMONIALS = [
   },
 ]
 
-// ============================================================================
-// AST TOKEN DEFINITIONS FOR CARD 1 BENTO
-// ============================================================================
+// AST token definitions for visual bento cards
 const AST_TOKENS = [
   {
     token: 'flex-row justify-between',
@@ -109,9 +103,7 @@ const AST_TOKENS = [
   },
 ]
 
-// ============================================================================
-// HOW IT WORKS PIPELINE STAGES
-// ============================================================================
+// How it works pipeline stages
 const PIPELINE_STAGES = [
   {
     step: '01',
@@ -209,9 +201,7 @@ $ npx vite dev
   },
 ]
 
-// ============================================================================
-// CODE SHOWCASE TABS
-// ============================================================================
+// Code showcase tabs
 const CODE_SHOWCASE_TABS = [
   {
     id: 'component',
@@ -377,9 +367,7 @@ export const PostStorySections: React.FC = () => {
 
   return (
     <div className="relative w-full bg-[#070912] text-white select-auto z-20">
-      {/* ===================================================================== */}
-      {/* 1. SECTION: #preview (Interactive Live Studio Deck & Playground)       */}
-      {/* ===================================================================== */}
+      {/* Interactive live studio deck & preview sandbox */}
       <section
         id="preview"
         className="scroll-mt-24 pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10"
@@ -492,9 +480,7 @@ export const PostStorySections: React.FC = () => {
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* 2. SECTION: #features (6-Card Cyber Bento Grid)                       */}
-      {/* ===================================================================== */}
+      {/* Feature bento grid */}
       <section
         id="features"
         className="scroll-mt-24 py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10"
@@ -767,9 +753,7 @@ export const PostStorySections: React.FC = () => {
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* 3. SECTION: #how-it-works (Interactive 4-Step Synthesis Pipeline)     */}
-      {/* ===================================================================== */}
+      {/* Synthesis pipeline overview */}
       <section
         id="how-it-works"
         className="scroll-mt-24 py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10"
@@ -874,9 +858,7 @@ export const PostStorySections: React.FC = () => {
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* 4. TABBED CODE SHOWCASE                                               */}
-      {/* ===================================================================== */}
+      {/* Tabbed code showcase */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
           <div>
@@ -931,9 +913,7 @@ export const PostStorySections: React.FC = () => {
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* 5. LOVED BY DEVELOPERS & DESIGNERS (Real Endorsements)                */}
-      {/* ===================================================================== */}
+      {/* Developer & designer endorsements */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-mono text-cyan-300 mb-3 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
@@ -1004,9 +984,7 @@ export const PostStorySections: React.FC = () => {
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* 6. ARCHITECTURE ROW                                                  */}
-      {/* ===================================================================== */}
+      {/* System architecture stack */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest block mb-1">
@@ -1048,9 +1026,7 @@ export const PostStorySections: React.FC = () => {
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* 6. FOOTER (Shared across all pages)                                   */}
-      {/* ===================================================================== */}
+      {/* Global footer */}
       <Footer />
     </div>
   )

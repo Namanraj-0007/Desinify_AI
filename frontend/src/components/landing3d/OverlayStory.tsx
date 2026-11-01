@@ -31,9 +31,7 @@ export const OverlayStory: React.FC<OverlayStoryProps> = ({ onFigmaSubmit }) => 
 
   return (
     <div className="relative w-full text-white pointer-events-none select-none">
-      {/* ===================================================================== */}
-      {/* STAGE 1: HERO HEADLINE (0% - 15%) */}
-      {/* ===================================================================== */}
+      {/* Stage 1: Hero headline (0% - 15%) */}
       <section className="h-screen w-full flex flex-col justify-between p-6 sm:p-12 max-w-7xl mx-auto">
         <div className="pt-16 sm:pt-20 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-xs font-mono text-cyan-300 mb-6 backdrop-blur-md">
@@ -81,9 +79,7 @@ export const OverlayStory: React.FC<OverlayStoryProps> = ({ onFigmaSubmit }) => 
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* STAGE 2: LAYER EXPLOSION (15% - 35%) */}
-      {/* ===================================================================== */}
+      {/* Stage 2: Layer explosion (15% - 35%) */}
       <section className="h-screen w-full flex items-center p-6 sm:p-12 max-w-7xl mx-auto">
         <div className="max-w-md p-6 rounded-2xl bg-slate-950/70 border border-white/10 backdrop-blur-xl shadow-2xl">
           <span className="text-[10px] font-mono text-indigo-400 uppercase tracking-widest block mb-1">
@@ -102,9 +98,7 @@ export const OverlayStory: React.FC<OverlayStoryProps> = ({ onFigmaSubmit }) => 
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* STAGE 3: GEMINI READS LAYOUT (35% - 55%) */}
-      {/* ===================================================================== */}
+      {/* Stage 3: Gemini layout analysis (35% - 55%) */}
       <section className="h-screen w-full flex items-center justify-end p-6 sm:p-12 max-w-7xl mx-auto">
         <div className="max-w-md p-6 rounded-2xl bg-slate-950/70 border border-cyan-500/30 backdrop-blur-xl shadow-2xl">
           <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest block mb-1">
@@ -130,9 +124,7 @@ export const OverlayStory: React.FC<OverlayStoryProps> = ({ onFigmaSubmit }) => 
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* STAGE 4: FASTAPI STREAMING (55% - 75%) */}
-      {/* ===================================================================== */}
+      {/* Stage 4: Component synthesis stream (55% - 75%) */}
       <section className="h-screen w-full flex items-center p-6 sm:p-12 max-w-7xl mx-auto">
         <div className="max-w-md p-6 rounded-2xl bg-slate-950/70 border border-indigo-500/30 backdrop-blur-xl shadow-2xl">
           <span className="text-[10px] font-mono text-indigo-400 uppercase tracking-widest block mb-1">
@@ -154,9 +146,7 @@ export const OverlayStory: React.FC<OverlayStoryProps> = ({ onFigmaSubmit }) => 
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* STAGE 5: ASSEMBLED CLEAN UI (75% - 90%) */}
-      {/* ===================================================================== */}
+      {/* Stage 5: Assembled clean UI (75% - 90%) */}
       <section className="h-screen w-full flex items-center justify-end p-6 sm:p-12 max-w-7xl mx-auto">
         <div className="max-w-md p-6 rounded-2xl bg-slate-950/70 border border-emerald-500/30 backdrop-blur-xl shadow-2xl">
           <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest block mb-1">
@@ -175,9 +165,7 @@ export const OverlayStory: React.FC<OverlayStoryProps> = ({ onFigmaSubmit }) => 
         </div>
       </section>
 
-      {/* ===================================================================== */}
-      {/* STAGE 6: PULLBACK & HERO CTA (90% - 100%) */}
-      {/* ===================================================================== */}
+      {/* Stage 6: Camera pullback & hero CTA (90% - 100%) */}
       <section className="h-screen w-full flex flex-col justify-center items-center p-6 max-w-4xl mx-auto text-center">
         <div className="pointer-events-auto w-full max-w-2xl p-7 sm:p-10 rounded-3xl bg-slate-950/90 border border-indigo-500/40 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
           {/* Subtle Glows */}

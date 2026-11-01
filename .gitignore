@@ -1,20 +1,53 @@
-# dependencies
-node_modules
-frontend/node_modules
-frontend/dist
+# Node & Frontend dependencies
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.vite/
 
-# env
+# Environment files
 .env
 .env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 
-# python
+# Python runtime & virtual environments
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.venv/
-venv/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+eggs/
+.eggs/
+parts/
+var/
+sdist/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.venv*/
+venv*/
+ENV/
+*.log
 
-# misc
+# IDE & OS files
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
 
+# Cloud & deployment caches
+.turbo/
+.vercel/

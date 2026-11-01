@@ -33,13 +33,13 @@ from app.services.figma_service import (
     fetch_image_render,
     fetch_node_info,
 )
-from app.services.mongo import get_db
+from app.services.mongo import get_db, get_collection
 
 router = APIRouter(prefix='/figma', tags=['figma'])
 
 # Collections (resolved lazily from the singleton DB client)
-figma_projects = get_db()['figma_projects']
-figma_tokens = get_db()['figma_tokens']
+figma_projects = get_collection('figma_projects')
+figma_tokens = get_collection('figma_tokens')
 
 
 async def _get_user_token(user_id: str, explicit_token: Optional[str] = None) -> str:

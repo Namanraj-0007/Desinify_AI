@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ImageDetail } from '../../api/figma'
-import { Badge } from '../ui/badge'
+import { Badge } from '../ui/Badge'
 
 type Props = {
   images: ImageDetail[]

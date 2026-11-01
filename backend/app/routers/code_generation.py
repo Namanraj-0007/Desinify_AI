@@ -32,15 +32,15 @@ from app.services.code_generation_service import (
     export_code,
 )
 from app.services.zip_service import create_project_zip, get_zip_filename
-from app.services.mongo import get_db
+from app.services.mongo import get_db, get_collection
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/codegen", tags=["code-generation"])
 
 # Collections
-figma_projects_collection = get_db()["figma_projects"]
-code_generations_collection = get_db()["code_generations"]
+figma_projects_collection = get_collection("figma_projects")
+code_generations_collection = get_collection("code_generations")
 
 
 @router.post("/generate", response_model=GeneratedCodeResponse)

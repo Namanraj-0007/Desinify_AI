@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     cors_origins: str = '*'
 
     api_prefix: str = '/api'
+    frontend_url: str = Field(
+        default='http://localhost:5073',
+        validation_alias=AliasChoices('frontend_url', 'client_url', 'app_url')
+    )
 
     # Google OAuth
     google_oauth_client_id: str = Field(

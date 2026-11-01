@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { FigmaProjectSummary } from '../../api/figma'
-import { Badge } from '../ui/badge'
+import { Badge } from '../ui/Badge'
 
 type Props = {
   project: FigmaProjectSummary

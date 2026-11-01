@@ -12,7 +12,7 @@ import { FigmaComponentPanel } from './FigmaComponentPanel'
 import { FigmaImageGallery } from './FigmaImageGallery'
 import { FigmaColorPalette } from './FigmaColorPalette'
 import { FigmaTypographyList } from './FigmaTypographyList'
-import { Badge } from '../ui/badge'
+import { Badge } from '../ui/Badge'
 
 type Tab = 'frames' | 'components' | 'images' | 'colors' | 'typography'
 

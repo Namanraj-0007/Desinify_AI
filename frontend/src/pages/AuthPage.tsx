@@ -121,6 +121,15 @@ export default function AuthPage({ defaultMode }: AuthPageProps) {
     }
   }, [token, loading, navigate])
 
+  // Check for error passed via redirect (e.g. from OAuth /auth/callback)
+  useEffect(() => {
+    const queryError = searchParams.get('error')
+    const stateError = (location.state as any)?.error
+    if (queryError || stateError) {
+      setError(queryError || stateError)
+    }
+  }, [location.search, location.state])
+
   // Real-time email validation
   const emailValidation = useMemo(() => validateEmail(email), [email])
 
@@ -375,9 +384,7 @@ export default function AuthPage({ defaultMode }: AuthPageProps) {
             )}
           </AnimatePresence>
 
-          {/* ========================================================================= */}
-          {/* DIRECT AUTHENTICATION FORM                                                */}
-          {/* ========================================================================= */}
+          {/* Direct authentication form */}
           <form
             onSubmit={onSubmit}
             noValidate

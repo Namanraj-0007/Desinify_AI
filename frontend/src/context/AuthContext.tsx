@@ -6,7 +6,6 @@ type AuthContextValue = {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   signup: (name: string, email: string, password: string) => Promise<void>
-  verifyOtpLogin: (email: string, otp: string) => Promise<void>
   socialLogin: (provider: 'google' | 'discord', email?: string, name?: string) => Promise<void>
   setSessionToken: (token: string) => void
   logout: () => void
@@ -88,16 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       async login(email, password) {
         const res = await API.post('/auth/login', { email, password })
-
-        if (res.data?.access_token) {
-          const newToken = res.data.access_token
-          localStorage.setItem('access_token', newToken)
-          localStorage.setItem('token', newToken)
-          setToken(newToken)
-        }
-      },
-      async verifyOtpLogin(email, otp) {
-        const res = await API.post('/auth/otp/verify', { email, otp })
 
         if (res.data?.access_token) {
           const newToken = res.data.access_token

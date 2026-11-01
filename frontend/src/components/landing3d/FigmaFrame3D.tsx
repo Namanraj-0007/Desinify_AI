@@ -121,9 +121,7 @@ export const FigmaFrame3D: React.FC<FigmaFrame3DProps> = ({
   return (
     <group ref={rootGroupRef} position={position} scale={scale}>
       <group ref={layersGroupRef}>
-        {/* ================================================================= */}
-        {/* LAYER 0: Canvas Artboard Base Frame */}
-        {/* ================================================================= */}
+        {/* Layer 0: Canvas Artboard Base Frame */}
         <group position={[0, 0, FRAME_LAYERS[0].zBase]}>
           <mesh geometry={baseCardGeo}>
             <meshStandardMaterial
@@ -157,9 +155,7 @@ export const FigmaFrame3D: React.FC<FigmaFrame3DProps> = ({
           </group>
         </group>
 
-        {/* ================================================================= */}
-        {/* LAYER 1: Navigation Bar */}
-        {/* ================================================================= */}
+        {/* Layer 1: Navigation Bar */}
         <group
           position={[
             0,
@@ -212,9 +208,7 @@ export const FigmaFrame3D: React.FC<FigmaFrame3DProps> = ({
           )}
         </group>
 
-        {/* ================================================================= */}
-        {/* LAYER 2: Primary Stats / Telemetry Card */}
-        {/* ================================================================= */}
+        {/* Layer 2: Primary Stats / Telemetry Card */}
         <group
           position={[
             0,
@@ -277,9 +271,7 @@ export const FigmaFrame3D: React.FC<FigmaFrame3DProps> = ({
           )}
         </group>
 
-        {/* ================================================================= */}
-        {/* LAYER 3: Interactive Features / Grid Card */}
-        {/* ================================================================= */}
+        {/* Layer 3: Interactive Features / Grid Card */}
         <group
           position={[
             0,
@@ -332,9 +324,7 @@ export const FigmaFrame3D: React.FC<FigmaFrame3DProps> = ({
           )}
         </group>
 
-        {/* ================================================================= */}
-        {/* LAYER 4: Primary Action Button */}
-        {/* ================================================================= */}
+        {/* Layer 4: Primary Action Button */}
         <group
           position={[
             0,
@@ -379,10 +369,7 @@ export const FigmaFrame3D: React.FC<FigmaFrame3DProps> = ({
           )}
         </group>
 
-        {/* ================================================================= */}
-        {/* GLOWING CONNECTOR LINES (Stage 3) */}
-        {/* Shows the visual bridge from base canvas to exploded layers */}
-        {/* ================================================================= */}
+        {/* Glowing connector lines (Stage 3): bridge from base canvas to exploded layers */}
         {explodeFactor > 0.2 && (
           <group>
             {FRAME_LAYERS.slice(1).map((layer, idx) => {

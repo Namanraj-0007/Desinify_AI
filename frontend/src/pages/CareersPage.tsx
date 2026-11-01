@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion'
 import PageTransition from '../components/ui/PageTransition'
 import AuroraBackground from '../components/ui/AuroraBackground'
-import { Badge } from '../components/ui/badge'
-import { Button } from '../components/ui/button'
+import { Badge } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/ui/SpotlightCard'
 
 const fadeUp = {

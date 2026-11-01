@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import PageTransition from '../components/ui/PageTransition'
 import AuroraBackground from '../components/ui/AuroraBackground'
-import { Badge } from '../components/ui/badge'
+import { Badge } from '../components/ui/Badge'
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },

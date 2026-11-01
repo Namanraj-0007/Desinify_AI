@@ -65,9 +65,7 @@ def create_app() -> FastAPI:
         try:
             import os
             print('[startup] os.getcwd() =', os.getcwd())
-            raw_env = settings.dump_env_for_debug()
-            for k in sorted(raw_env.keys()):
-                print(f"  {k}={raw_env[k]}")
+
 
             masked = settings.masked_config()
             for k in sorted(masked.keys()):
@@ -120,7 +118,7 @@ def create_app() -> FastAPI:
         traceback.print_exc()
         return JSONResponse(
             status_code=500,
-            content={"detail": f"Internal server error: {str(exc)}"},
+            content={"detail": "Internal server error"},
         )
 
     return app

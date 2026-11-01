@@ -19,9 +19,9 @@ import { FigmaProjectCard } from '../components/figma/FigmaProjectCard'
 import PageTransition from '../components/ui/PageTransition'
 import SpotlightCard from '../components/ui/SpotlightCard'
 import AILoadingState from '../components/ui/AILoadingState'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Badge } from '../components/ui/Badge'
 
 type Project = {
   id: string

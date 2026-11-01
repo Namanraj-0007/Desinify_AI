@@ -72,14 +72,6 @@ class LoginRequest(BaseModel):
         return v
 
 
-class LoginStep1Response(BaseModel):
-    status: str = 'otp_required'
-    message: str
-    email: str
-    dev_otp: Optional[str] = None
-    expires_in_seconds: int = 600
-
-
 class SocialLoginRequest(BaseModel):
     provider: str  # 'google' | 'discord'
     email: EmailStr
@@ -90,39 +82,6 @@ class SocialLoginRequest(BaseModel):
     @classmethod
     def check_email(cls, v: str) -> str:
         return validate_and_normalize_email(v)
-
-
-class SendOtpRequest(BaseModel):
-    email: EmailStr
-
-    @field_validator('email', mode='before')
-    @classmethod
-    def check_email(cls, v: str) -> str:
-        return validate_and_normalize_email(v)
-
-
-class VerifyOtpRequest(BaseModel):
-    email: EmailStr
-    otp: str
-
-    @field_validator('email', mode='before')
-    @classmethod
-    def check_email(cls, v: str) -> str:
-        return validate_and_normalize_email(v)
-
-    @field_validator('otp')
-    @classmethod
-    def check_otp(cls, v: str) -> str:
-        clean = v.strip()
-        if not clean or len(clean) != 6 or not clean.isdigit():
-            raise ValueError("OTP must be a 6-digit numeric verification code")
-        return clean
-
-
-class OtpResponse(BaseModel):
-    message: str
-    dev_otp: Optional[str] = None
-    expires_in_seconds: int = 600
 
 
 class TokenResponse(BaseModel):

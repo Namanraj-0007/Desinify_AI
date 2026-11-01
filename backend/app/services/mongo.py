@@ -210,3 +210,23 @@ def projects_collection():
     return get_db()['projects']
 
 
+
+
+class DynamicCollectionProxy:
+    """Proxy that dynamically resolves the collection from the active database."""
+    def __init__(self, name: str):
+        self._name = name
+
+    def _get_target(self) -> Any:
+        return get_db()[self._name]
+
+    def __getattr__(self, item: str) -> Any:
+        return getattr(self._get_target(), item)
+
+    def __getitem__(self, item: str) -> Any:
+        return self._get_target()[item]
+
+
+def get_collection(name: str) -> DynamicCollectionProxy:
+    """Return a dynamic proxy for the named collection that always targets the active DB."""
+    return DynamicCollectionProxy(name)

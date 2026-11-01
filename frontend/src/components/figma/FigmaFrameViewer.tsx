@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FrameDetail } from '../../api/figma'
-import { Badge } from '../ui/badge'
+import { Badge } from '../ui/Badge'
 
 type Props = {
   frames: FrameDetail[]
