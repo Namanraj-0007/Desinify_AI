@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="cockpitGlow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1e1b4b" stop-opacity="0.6" />
+      <stop offset="60%" stop-color="#0a0f1d" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#020617" stop-opacity="1" />
+    </radialGradient>
+    <linearGradient id="cpBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.5" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
+
+  <style>
+    .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  </style>
+
+  <!-- Frame Background -->
+  <rect width="800" height="500" rx="16" fill="#020617" />
+  <rect width="800" height="500" rx="16" fill="url(#cockpitGlow)" stroke="url(#cpBorder)" stroke-width="1.5" />
+
+  <!-- Window Header -->
+  <rect x="0" y="0" width="800" height="42" rx="16" fill="#0b0f19" fill-opacity="0.9" />
+  <circle cx="28" cy="21" r="5" fill="#ef4444" />
+  <circle cx="44" cy="21" r="5" fill="#f59e0b" />
+  <circle cx="60" cy="21" r="5" fill="#10b981" />
+  <text x="400" y="26" text-anchor="middle" fill="#94a3b8" font-size="12" class="mono">LIVE COCKPIT • RESPONSIVE HOT-STATE SANDBOX</text>
+
+  <!-- Device Switcher Toolbar -->
+  <g transform="translate(240, 56)">
+    <rect width="320" height="34" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+    <!-- Desktop Active -->
+    <rect x="4" y="4" width="100" height="26" rx="6" fill="#6366f1" />
+    <text x="54" y="21" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="600" class="sans">Desktop (1440)</text>
+    <!-- Tablet -->
+    <text x="160" y="21" text-anchor="middle" fill="#94a3b8" font-size="11" class="sans">Tablet (768)</text>
+    <!-- Mobile -->
+    <text x="265" y="21" text-anchor="middle" fill="#94a3b8" font-size="11" class="sans">Mobile (375)</text>
+  </g>
+
+  <!-- Sandbox Canvas Area -->
+  <rect x="60" y="105" width="680" height="315" rx="12" fill="#030712" fill-opacity="0.75" stroke="#1e293b" stroke-width="1" stroke-dasharray="4,4" />
+
+  <!-- Rendered UI Card in Sandbox -->
+  <g transform="translate(180, 135)">
+    <!-- Outer Card Container -->
+    <rect width="440" height="255" rx="20" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" />
+
+    <!-- Card Header -->
+    <g transform="translate(24, 28)">
+      <rect width="36" height="36" rx="10" fill="#6366f1" fill-opacity="0.2" stroke="#6366f1" stroke-width="1" />
+      <!-- Small Spark Icon -->
+      <path d="M 18,10 L 21,17 L 28,18 L 23,23 L 24,30 L 18,26 L 12,30 L 13,23 L 8,18 L 15,17 Z" fill="#818cf8" />
+
+      <text x="48" y="16" fill="#38bdf8" font-size="10" font-weight="700" class="mono" letter-spacing="0.08em">AI SYNTHESIS ACTIVE</text>
+      <text x="48" y="34" fill="#ffffff" font-size="16" font-weight="700" class="sans">Neural Dashboard Widget</text>
+
+      <!-- Status Pill -->
+      <rect x="300" y="6" width="90" height="22" rx="11" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-width="1" />
+      <circle cx="312" cy="17" r="3.5" fill="#10b981" />
+      <text x="350" y="21" text-anchor="middle" fill="#34d399" font-size="10" font-weight="600" class="mono">HOT RELOAD</text>
+    </g>
+
+    <!-- Metrics Row -->
+    <g transform="translate(24, 90)">
+      <rect width="186" height="65" rx="12" fill="#0b0f19" stroke="#1e293b" stroke-width="1" />
+      <text x="14" y="24" fill="#64748b" font-size="11" class="sans">Generated Lines</text>
+      <text x="14" y="50" fill="#ffffff" font-size="20" font-weight="700" class="mono">1,420 <tspan fill="#10b981" font-size="12">TSX</tspan></text>
+
+      <rect x="204" y="0" width="186" height="65" rx="12" fill="#0b0f19" stroke="#1e293b" stroke-width="1" />
+      <text x="14" y="24" fill="#64748b" font-size="11" class="sans">AST Parse Latency</text>
+      <text x="14" y="50" fill="#ffffff" font-size="20" font-weight="700" class="mono">342ms <tspan fill="#38bdf8" font-size="12">P95</tspan></text>
+    </g>
+
+    <!-- Interactive Button / Controls in Card -->
+    <g transform="translate(24, 175)">
+      <rect width="250" height="42" rx="10" fill="#6366f1" />
+      <text x="125" y="26" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600" class="sans">Interact with Component</text>
+
+      <rect x="265" y="0" width="125" height="42" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" />
+      <text x="327" y="26" text-anchor="middle" fill="#94a3b8" font-size="12" font-weight="500" class="sans">Toggle State</text>
+    </g>
+  </g>
+
+  <!-- Sandbox Dimension Rulers -->
+  <text x="735" y="265" fill="#475569" font-size="10" class="mono">1440px</text>
+  <line x1="730" y1="120" x2="730" y2="400" stroke="#334155" stroke-width="1" stroke-dasharray="2,2" />
+
+  <!-- Bottom Bar Info -->
+  <g transform="translate(30, 440)">
+    <rect width="740" height="38" rx="8" fill="#0b0f19" fill-opacity="0.8" stroke="#1e293b" stroke-width="1" />
+    <text x="16" y="24" fill="#e2e8f0" font-size="12" class="sans"><tspan fill="#10b981" font-weight="bold">Feature 02</tspan> — Test live generated React 19 components with real state hooks and multi-device viewports.</text>
+  </g>
+</svg>

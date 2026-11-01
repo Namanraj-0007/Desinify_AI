@@ -27,7 +27,7 @@
 
 <br/>
 
-[3D Spatial Engine](#-the-3d-spatial-canvas-engine) • [Interactive Storyboard](#-6-stage-scroll-storyboard-matrix) • [Architecture](#-system-architecture) • [Live Cockpit](#-interactive-live-studio-cockpit) • [Local Setup](#-local-setup--development) • [API Reference](#-core-api-reference)
+[🎬 Video Walkthrough](#-workflow-video-walkthrough) • [📸 UI/UX Gallery](#-ui--ux-experience-gallery) • [3D Spatial Engine](#-the-3d-spatial-canvas-engine) • [Interactive Storyboard](#-6-stage-scroll-storyboard-matrix) • [Architecture](#-system-architecture) • [Live Cockpit](#-interactive-live-studio-cockpit) • [Local Setup](#-local-setup--development) • [API Reference](#-core-api-reference)
 
 </div>
 
@@ -43,6 +43,116 @@ Traditional AI code generators struggle with visual fidelity. Raw text LLMs lack
 2. **Multimodal Vision Geometric AST**: Passes high-res raster renders and structural nodes to **Google Gemini 2.5 Flash**, synthesizing spatial layout semantics into clean Flexbox, CSS Grid, and responsive Tailwind classes.
 3. **High-Throughput ASGI Compiler**: Uses **FastAPI** to compile and stream production-ready React 19 JSX via Server-Sent Events (SSE) with sub-350ms initial AST latency.
 4. **Pinned 3D Spatial Storyboard**: A scroll-driven WebGL spatial viewport built with **React Three Fiber (R3F)** and **Three.js** that visually deconstructs Figma frames into floating, exploded layers as you scroll through the product story.
+
+---
+
+## 🎬 Workflow Video Walkthrough
+
+<div align="center">
+
+<a href="#-workflow-video-walkthrough">
+  <img src="docs/media/workflow-video-banner.svg" alt="Designify AI Workflow Video Walkthrough" width="100%" />
+</a>
+
+<br/>
+
+> **⚡ Fast Forward:** Watch how Designify AI translates complex, nested Figma vector frames into production-ready React 19 + TypeScript components in under 12 seconds.
+
+</div>
+
+### ⏱ Video Timeline & Chapter Navigation
+
+| Timestamp | Chapter | Core Pipeline Phase | What Happens Under the Hood |
+| :---: | :--- | :--- | :--- |
+| `00:00` | **Figma Frame Ingestion** | Ingestion & Tokenization | User pastes Figma frame URL or picks a preset. The backend queries the **Figma REST API v1** for node IDs, bounding boxes, autolayout rules, and fill styles. |
+| `00:24` | **3D Spatial Deconstruction** | WebGL Spatial Engine | The frame transitions into the **Three.js / R3F viewport**. Layers explode along the Z-axis ($Z=0 \to 2.35$), visually separating background cards, typography, sparklines, and interactive buttons. |
+| `00:52` | **Gemini 2.5 Multimodal AST** | Neural Geometric Reasoning | Vector hierarchies and raster snapshots are analyzed by **Google Gemini 2.5 Flash**. The engine deduces Flexbox flow, CSS Grid templates, and maps Figma auto-layout gaps to Tailwind classes. |
+| `01:25` | **Asynchronous SSE Code Stream** | ASGI Compilation | **FastAPI** opens an HTTP Server-Sent Events stream. Production TypeScript 5.5 + React 19 JSX code streams into the dual-pane Monaco editor at ~128 tokens/sec. |
+| `01:58` | **Interactive Sandbox Testing** | Hot-State Verification | The user switches between **Desktop (1440px)**, **Tablet (768px)**, and **Mobile (375px)** viewports in the Studio Cockpit, testing interactive button states and motion animations. |
+| `02:18` | **Production Bundle Export** | 1-Click ZIP Delivery | User clicks **Export ZIP** to download a pre-configured Vite project with `package.json`, `tsconfig.json`, and Tailwind ready to run locally via `npm run dev`. |
+
+> [!TIP]
+> **Recording your own walkthrough?** Drop your live recording directly into [`docs/media/demo-walkthrough.mp4`](docs/media) or link your hosted YouTube / Loom recording URL in the banner above.
+
+---
+
+## 🗺 End-to-End Workflow Blueprint
+
+```
+┌─────────────────┐       ┌────────────────────────┐       ┌────────────────────────┐       ┌─────────────────┐
+│   01: INGEST    │  ───► │    02: DECONSTRUCT     │  ───► │     03: SYNTHESIZE     │  ───► │    04: SHIP     │
+│                 │       │                        │       │                        │       │                 │
+│ • Figma URL     │       │ • Three.js R3F Mesh    │       │ • Gemini 2.5 Flash AST │       │ • React 19 TSX  │
+│ • REST API v1   │       │ • Z-Axis Explosion     │       │ • Tailwind v3 Tokens   │       │ • Monaco IDE    │
+│ • Vector Tree   │       │ • Spatial Ray Tracing  │       │ • FastAPI SSE Stream   │       │ • Vite ZIP Pkg  │
+└─────────────────┘       └────────────────────────┘       └────────────────────────┘       └─────────────────┘
+         │                           │                                │                           │
+         ▼                           ▼                                ▼                           ▼
+   Figma JSON Nodes           WebGL 60 FPS Viewport            Multimodal Reasoning          Ready-to-Deploy App
+```
+
+---
+
+## 📸 UI & UX Experience Gallery
+
+Explore the high-fidelity user interface, spatial telemetry cockpit, and developer tooling designed for Designify AI:
+
+<div align="center">
+<table border="0" cellpadding="8" cellspacing="0" width="100%">
+<tr>
+<td width="50%" valign="top">
+
+### 01 · 3D Spatial Canvas Engine
+<a href="docs/media/ui-3d-spatial-canvas.svg">
+  <img src="docs/media/ui-3d-spatial-canvas.svg" alt="3D Spatial Canvas Engine" width="100%" />
+</a>
+
+- **WebGL R3F Viewport**: Pinned 3D canvas driven by virtual scroll offsets ($t \in [0, 1]$) with smooth cubic damping ($\lambda = 0.22$).
+- **Z-Separation Explosion**: Deconstructs Figma artboard into 6 floating spatial meshes with neon cyan/magenta bounding rays.
+- **Real-Time Camera Telemetry**: Dynamic frustum tracking showing camera coordinates, Euler tilt angles, and field of view.
+
+</td>
+<td width="50%" valign="top">
+
+### 02 · Interactive Live Studio Cockpit
+<a href="docs/media/ui-interactive-cockpit.svg">
+  <img src="docs/media/ui-interactive-cockpit.svg" alt="Interactive Live Studio Cockpit" width="100%" />
+</a>
+
+- **Multi-Device Viewport Switcher**: Instantly preview synthesized components across Desktop ($1440\text{px}$), Tablet ($768\text{px}$), and Mobile ($375\text{px}$).
+- **Hot-State Sandbox**: Live interactive state triggers with real `useState` hooks, active hover states, and spring animations.
+- **Zero-Flicker Hot Reloading**: Instant component re-rendering without losing active component state or form values.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 03 · Figma Vector Token Inspector
+<a href="docs/media/ui-token-inspector.svg">
+  <img src="docs/media/ui-token-inspector.svg" alt="Figma Vector Token Inspector" width="100%" />
+</a>
+
+- **REST API v1 AST Parsing**: Inspects complete vector hierarchy including frames, auto-layout directions, gaps, and paddings.
+- **Design Token Swatches**: Extracts exact hex/HSL color fills, typography scales (Inter 700, -0.02em), and border radii tokens.
+- **Strict Layout Mapping**: Direct translation of Figma auto-layout flex rules into semantic Tailwind CSS utility classes.
+
+</td>
+<td width="50%" valign="top">
+
+### 04 · Monaco Code Generator & Stream
+<a href="docs/media/ui-monaco-codegen.svg">
+  <img src="docs/media/ui-monaco-codegen.svg" alt="Monaco Code Generator" width="100%" />
+</a>
+
+- **FastAPI SSE Streaming**: Real-time token streaming at ~128 tokens/sec with sub-350ms AST generation latency.
+- **Multi-File Tab Viewer**: Split-tab view for `Component.tsx`, `Tailwind.css`, and extracted `Tokens.json`.
+- **1-Click ZIP Delivery**: Export full production-ready Vite + TypeScript project bundle with clean `package.json` setup.
+
+</td>
+</tr>
+</table>
+</div>
 
 ---
 
