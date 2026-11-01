@@ -513,9 +513,9 @@ The output generates optimized static assets inside `frontend/dist/` with code-s
 ## 👤 Author & Acknowledgements
 
 **Designify AI** is designed, engineered, and maintained by **Namandip Raj**:
-- **GitHub**: [@Namanraj-0007](https://github.com/Namanraj-0007) / [@NamandipRaj](https://github.com/NamandipRaj)
-- **Portfolio**: [portfolio-namandip.vercel.app](https://portfolio-namandip.vercel.app)
-- **Email**: [namandraj0007@gmail.com](mailto:namandraj0007@gmail.com)
+- **GitHub**: [@Namanraj-0007](https://github.com/Namanraj-0007)
+- **Portfolio**: [Link](https://portfolio-gamma-seven-58.vercel.app/)
+- **Email**: [Mail](mailto:namandraj0007@gmail.com)
 
 ---
 
